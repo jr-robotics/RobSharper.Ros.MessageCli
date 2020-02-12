@@ -8,6 +8,11 @@
         "Name": "nuget.org",
         "Source": "https://api.nuget.org/v3/index.json",
         "ProtocolVersion": 3
+      },
+      {
+        "Name": "Robotics ROBV005",
+        "Source": "http://143.224.140.111:33333/v3/index.json",
+        "ProtocolVersion": 3
       }
     ]
   }
