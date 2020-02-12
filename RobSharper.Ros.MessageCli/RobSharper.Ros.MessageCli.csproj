@@ -3,9 +3,16 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.1</TargetFramework>
+        <Authors>Guido Breitenhuber</Authors>
+        <Copyright>JOANNEUM RESEARCH Forschungsgesellschaft mbH</Copyright>
+        <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+        <Description>ROSMSG builds your message packages</Description>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageEssentials.git</RepositoryUrl>
+        <PackageTags>ROS;RobSharper;RobSharper.Ros;ROS.Messages;</PackageTags>
 
         <PackAsTool>true</PackAsTool>
-        <ToolCommandName>rosmsg</ToolCommandName>
+        <ToolCommandName>dotnet-rosmsg</ToolCommandName>
     </PropertyGroup>
 
     <ItemGroup>

@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="RobSharper.Ros.MessageEssentials" Version="1.0.0-preview-3" />
+      <PackageReference Include="RobSharper.Ros.MessageEssentials" Version="1.0.0-rc2" />
       <PackageReference Include="Uml.Robotics.Ros.MessageBase" Version="1.0.7" />
     </ItemGroup>
 
