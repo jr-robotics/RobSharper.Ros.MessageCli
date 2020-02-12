@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-RC1
+dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc1
 ```
 
 ## Configuration
@@ -32,4 +32,6 @@ dotnet rosmsg config feeds remove <NAME>
 
 ## Usage
 
-TODO
+```
+dotnet rosmsg build --help
+```
