@@ -45,7 +45,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             
             if (!proc.HasExited || proc.ExitCode != 0)
             {
-                return proc;    //TODO: Remove after testing
                 throw NewProcessFailedException(proc, procOutput, null);
             }
             
