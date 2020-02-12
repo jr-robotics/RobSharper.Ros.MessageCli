@@ -88,22 +88,22 @@ baget:man:
 
 # Deploy to NuGet.org
 # This task has to be triggered manually
-nuget.org:
-  stage: deploy
-  dependencies:
-    - nuget-pack
-  variables:
-    GIT_STRATEGY: none
-  environment:
-    name: NuGet.org
-    url: https://www.nuget.org/
-  only:
-    - master
-    - /^v.*$/
-  script:
-    - 'echo TODO: Uncomment gitlab-ci.yml script'
-    - '#cd nuget'
-    - '#dotnet nuget push *.nupkg -s $NUGET_ORG_URL -k $NUGET_ORG_API_KEY'
-  tags:
-    - docker-executor
-  when: manual
+#nuget.org:
+#  stage: deploy
+#  dependencies:
+#    - nuget-pack
+#  variables:
+#    GIT_STRATEGY: none
+#  environment:
+#    name: NuGet.org
+#    url: https://www.nuget.org/
+#  only:
+#    - master
+#    - /^v.*$/
+#  script:
+#    - 'echo TODO: Uncomment gitlab-ci.yml script'
+#    - '#cd nuget'
+#    - '#dotnet nuget push *.nupkg -s $NUGET_ORG_URL -k $NUGET_ORG_API_KEY'
+#  tags:
+#    - docker-executor
+#  when: manual
