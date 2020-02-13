@@ -28,7 +28,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             var procOutput = new StringBuilder();
             try
             {
-                proc.OutputDataReceived += (s, e) => Colorful.Console.WriteLine($"  {e.Data}", Color.Gray);
+                proc.OutputDataReceived += (s, e) => WriteOutput(e);
                 proc.ErrorDataReceived += (s, e) => Colorful.Console.Error.WriteLine($"  {e.Data}");
                 
                 proc.Start();
@@ -47,6 +47,18 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             }
             
             return proc;
+        }
+
+        private static void WriteOutput(DataReceivedEventArgs e)
+        {
+            var color = Color.Gray;
+            
+            if (e.Data.Trim().StartsWith("error:", StringComparison.CurrentCultureIgnoreCase))
+            {
+                color = Color.Orange;
+            }
+            
+            Colorful.Console.WriteLine($"  {e.Data}", color);
         }
 
         private static ProcessFailedException NewProcessFailedException(Process proc, StringBuilder procOutput,
