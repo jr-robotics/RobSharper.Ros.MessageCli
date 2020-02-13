@@ -51,8 +51,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         private static void WriteOutput(DataReceivedEventArgs e)
         {
+            if (e.Data == null)
+                return;
+
             var color = Color.Gray;
-            
             if (e.Data.Trim().StartsWith("error:", StringComparison.CurrentCultureIgnoreCase))
             {
                 color = Color.Orange;
