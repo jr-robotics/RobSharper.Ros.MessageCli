@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Text;
+using CommandLine;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -26,16 +28,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             var procOutput = new StringBuilder();
             try
             {
+                proc.OutputDataReceived += (s, e) => Colorful.Console.WriteLine($"  {e.Data}", Color.Gray);
+                proc.ErrorDataReceived += (s, e) => Colorful.Console.Error.WriteLine($"  {e.Data}");
+                
                 proc.Start();
-            
-                while (!proc.StandardOutput.EndOfStream)
-                {
-                    var line = proc.StandardOutput.ReadLine();
-
-                    procOutput.AppendLine(line);
-                    Console.WriteLine(line);
-                }
-
+                proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
                 proc.WaitForExit();
             }
             catch (Exception e)
@@ -63,7 +61,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static Process Build(string projectFilePath)
         {
-            var command = $"build \"{projectFilePath}\" -c Release -v normal";
+            var command = $"build \"{projectFilePath}\" -c Release -v minimal";
             return Execute(command);
         }
     }

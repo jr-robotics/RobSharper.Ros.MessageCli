@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -61,9 +62,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
         public void Execute()
         {
+            Colorful.Console.WriteLine($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
             CreateProjectFile();
             AddNugetDependencies();
-            
+        
             if (!Package.PackageInfo.IsMetaPackage)
             {
                 CreateMessages();
@@ -71,7 +73,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 CreateActions();
             }
 
-            DotNetProcess.Build(_projectFilePath);
+            BuildProject();
             CopyOutput();
         }
 
@@ -95,6 +97,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             WriteFile(nugetConfigFilePath, nugetConfigFile);
 
             _projectFilePath = projectFilePath;
+        }
+
+        private void BuildProject()
+        {
+            Colorful.Console.WriteLine();
+            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            DotNetProcess.Build(_projectFilePath);
+            Colorful.Console.WriteLine();
         }
 
         private void AddNugetDependencies()
@@ -123,6 +133,16 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                     .Distinct()
                     .ToList();
             }
+
+            if (!messageNugetPackages.Any()) 
+                return;
+            
+            Colorful.Console.WriteLine($"Restoring package dependencies");
+            foreach (var dependency in messageNugetPackages)
+            {
+                Colorful.Console.WriteLine($"  {dependency}");
+            }
+            Colorful.Console.WriteLine();
             
             foreach (var dependency in messageNugetPackages)
             {

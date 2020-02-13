@@ -1,4 +1,6 @@
-using Microsoft.Extensions.Configuration;
+using System;
+using System.Drawing;
+using System.Linq;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 
@@ -10,6 +12,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             var context = CodeGenerationContext.Create(options.PackagePath);
 
+            if (!context.Packages.Any())
+            {
+                Colorful.Console.WriteLine("Package directory does not contain any packages.");
+                return 0;
+            }
+            
             using (var directories = new CodeGenerationDirectoryContext(options.OutputPath, options.PreserveGeneratedCode))
             {
                 // Parse message files and build package dependency graph
@@ -24,7 +32,19 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
                     var generator = new RosMessagePackageGenerator(package, options, packageDirectories, templateEngine);
 
-                    generator.Execute();
+                    try
+                    {
+                        generator.Execute();
+                    }
+                    catch (Exception e)
+                    {
+                        Colorful.Console.WriteLine();
+                        Colorful.Console.WriteLine($"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]", Color.Red);
+                        Colorful.Console.WriteLine(e.Message, Color.Red);
+                        Colorful.Console.WriteLine();
+                        
+                        return 1;
+                    }
                 }
             }
 
