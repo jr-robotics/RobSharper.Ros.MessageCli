@@ -75,6 +75,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
             BuildProject();
             CopyOutput();
+            
+            Colorful.Console.WriteLine($"Package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}] created", Color.Lime);
+            Colorful.Console.WriteLine();
         }
 
         private void CreateProjectFile()
@@ -103,8 +106,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         {
             Colorful.Console.WriteLine();
             Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
-            DotNetProcess.Build(_projectFilePath);
             Colorful.Console.WriteLine();
+            
+            DotNetProcess.Build(_projectFilePath);
         }
 
         private void AddNugetDependencies()
