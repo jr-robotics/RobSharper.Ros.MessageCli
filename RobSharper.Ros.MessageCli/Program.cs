@@ -53,7 +53,10 @@ namespace RobSharper.Ros.MessageCli
                         {
                             return ConfigurationProgram.Execute(options);
                         },
-                        errs => 1);
+                        errs =>
+                        {
+                            return 1;
+                        });
             }
         }
 
