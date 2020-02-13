@@ -10,7 +10,7 @@ dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc2
 ```
 dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--nupkg] [--dll]
 ```
-|Placeholder | Description |
+|Argument | Description |
 |---|---|
 |ROS_MESSAGE_PACKAGE_FOLDER | Path to a directory containing one or more ROS message packages. |
 |DESTINATION_FOLDER | Folder where the generated messages will be copied. |
