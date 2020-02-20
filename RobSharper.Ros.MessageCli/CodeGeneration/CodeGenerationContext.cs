@@ -66,18 +66,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         ///
         /// If the filter is null or empty, no filtering is applied.
         /// </summary>
-        /// <param name="filter">Filter to apply</param>
-        public void FilterPackages(string filter)
+        /// <param name="filters">Filter to apply</param>
+        public void FilterPackages(IEnumerable<string> filters)
         {
-            if (string.IsNullOrEmpty(filter))
+            if (filters == null || !filters.Any())
                 return;
-
-            var filterParts = filter.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            
             var innerFilters = new List<Func<string, bool>>();
 
-            foreach (var filterPart in filterParts)
+            foreach (var filter in filters)
             {
-                var f = filterPart;
+                var f = filter;
                 Func<string, bool> innerFilter;
 
                 if (f.StartsWith("*"))

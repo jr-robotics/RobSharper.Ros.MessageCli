@@ -35,10 +35,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 // Parse message files and build package dependency graph
                 context.ParseMessages();
 
-                if (!string.IsNullOrEmpty(options.Filter))
+                if (options.Filter != null && options.Filter.Any())
                 {
                     context.FilterPackages(options.Filter);
-                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{options.Filter}'.");
+                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
                 }
                 else
                 {
