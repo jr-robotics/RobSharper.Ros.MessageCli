@@ -56,6 +56,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MetaPackage
                 // AND
                 // Add all other packages set as dependency which are also in the build pipeline
                 if (dependency.EndsWith("msgs", StringComparison.InvariantCultureIgnoreCase) ||
+                    dependency.EndsWith("actions", StringComparison.InvariantCultureIgnoreCase) ||
                     _buildPackages.Packages.Any(x => x.Name.Equals(dependency, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     dependencies.Add(dependency);

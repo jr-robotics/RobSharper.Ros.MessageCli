@@ -100,7 +100,7 @@ namespace RobSharper.Ros.MessageCli
 
                         if (value is float)
                         {
-                            output.WriteSafeString(value);
+                            output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value));
                             output.WriteSafeString("f");
                             return;
                         }
@@ -111,7 +111,7 @@ namespace RobSharper.Ros.MessageCli
                             return;
                         }
                         
-                        output.WriteSafeString(value);
+                        output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value));
                     });
                     return new FileBasedHandlebarsTemplateEngine(TemplatePaths.TemplatesDirectory, config);
                 })
