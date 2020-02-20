@@ -8,7 +8,7 @@ dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc3
 
 ## Usage
 ```
-dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> --filter FILTER_EXPR[ FILTER_EXPR]* [--nupkg] [--dll]
+dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--filter FILTER_EXPR[ FILTER_EXPR]*] [--nupkg] [--dll]
 ```
 |Argument | Description |
 |---|---|
