@@ -56,11 +56,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         /// <summary>
         /// Filters the package list based on the given filter parameter.
         /// 
-        /// Filter is
-        ///   a package name or
-        ///   a list of package names (delimited by space ' ' or comma ','),
-        /// which will be used to filter the package list. Only packages matching the filter
-        /// expression and dependent packages will be included in the final packages list.
+        /// Filter is a list of package names which will be used to filter the package list.
+        /// Only packages matching the filter expression and dependent packages will be included in
+        /// the final packages list.
         /// The filter may also contain the asterisk (*) as first or last character to specify
         /// an ends with or starts with expression.
         ///
