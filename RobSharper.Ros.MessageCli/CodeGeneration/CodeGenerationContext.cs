@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -50,6 +51,100 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 package.Parser.ParseMessages();
             }
+        }
+
+        /// <summary>
+        /// Filters the package list based on the given filter parameter.
+        /// 
+        /// Filter is
+        ///   a package name or
+        ///   a list of package names (delimited by space ' ' or comma ','),
+        /// which will be used to filter the package list. Only packages matching the filter
+        /// expression and dependent packages will be included in the final packages list.
+        /// The filter may also contain the asterisk (*) as first or last character to specify
+        /// an ends with or starts with expression.
+        ///
+        /// If the filter is null or empty, no filtering is applied.
+        /// </summary>
+        /// <param name="filter">Filter to apply</param>
+        public void FilterPackages(string filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+                return;
+
+            var filterParts = filter.Split(new[] {',', ' '}, StringSplitOptions.RemoveEmptyEntries);
+            var innerFilters = new List<Func<string, bool>>();
+
+            foreach (var filterPart in filterParts)
+            {
+                var f = filterPart;
+                Func<string, bool> innerFilter;
+
+                if (f.StartsWith("*"))
+                {
+                    innerFilter = s => s.EndsWith(f.Substring(1));
+                }
+                else if (f.EndsWith("*"))
+                {
+                    innerFilter = s => s.StartsWith(f.Substring(0, f.Length - 1));
+                }
+                else
+                {
+                    innerFilter = s => s.Equals(f);
+                }
+
+                innerFilters.Add(innerFilter);
+            }
+            
+            if (innerFilters.Count == 0)
+                return;
+
+            Func<string, bool> filterExpr;
+
+            if (innerFilters.Count == 1)
+            {
+                filterExpr = innerFilters.First();
+            }
+            else
+            {
+                filterExpr = s => innerFilters.Any(f => f(s));
+            }
+            
+            FilterPackages(filterExpr);
+        }
+
+        public void FilterPackages(Func<string, bool> filterExpr)
+        {
+            if (filterExpr == null) throw new ArgumentNullException(nameof(filterExpr));
+            
+            ParseMessages();
+
+            var filteredPackages = Packages
+                .Where(p => filterExpr(p.PackageInfo.Name))
+                .ToList();
+
+
+            bool hasMissingPackages;
+            do
+            {
+                var missingPackageNames = filteredPackages
+                    .SelectMany(p => p.Parser.PackageDependencies)
+                    .Distinct()
+                    .Except(filteredPackages
+                        .Select(p => p.PackageInfo.Name)
+                    )
+                    .ToList();
+
+                hasMissingPackages = missingPackageNames.Any();
+
+                var missingPackages = Packages
+                    .Where(p => missingPackageNames.Contains(p.PackageInfo.Name))
+                    .ToList();
+
+                filteredPackages.AddRange(missingPackages);
+            } while (hasMissingPackages);
+
+            Packages = filteredPackages;
         }
 
         /// <summary>

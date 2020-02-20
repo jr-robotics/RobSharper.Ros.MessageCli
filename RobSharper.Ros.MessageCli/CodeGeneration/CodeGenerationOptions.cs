@@ -17,6 +17,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         [Option("preserve", Required = false, HelpText = "Preserve generated source code")]
         public bool PreserveGeneratedCode { get; set; }
+        
+        [Option("filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs')")]
+        public string Filter { get; set; }
 
         [Option("root-namespace", Required = false, HelpText = "Root namespace", Hidden = true)]
         public string RootNamespace

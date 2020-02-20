@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Linq;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
+using Console = Colorful.Console;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -22,7 +23,18 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 // Parse message files and build package dependency graph
                 context.ParseMessages();
-                
+
+                if (!string.IsNullOrEmpty(options.Filter))
+                {
+                    context.FilterPackages(options.Filter);
+                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{options.Filter}'.");
+                }
+                else
+                {
+                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages");
+                }
+
+
                 // Set build order depending on package dependencies
                 context.ReorderPackagesForBuilding();
                 
