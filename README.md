@@ -8,13 +8,13 @@ dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc3
 
 ## Usage
 ```
-dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--nupkg] [--dll]
+dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> -- filter 'FILTER_EXPR[ FILTER_EXPR]*' [--nupkg] [--dll]
 ```
 |Argument | Description |
 |---|---|
 |ROS_MESSAGE_PACKAGE_FOLDER | Path to a directory containing one or more ROS message packages. |
 |DESTINATION_FOLDER | Folder where the generated messages will be copied. |
-| -- filter 'FILTER_EXPR[ FILTER_EXPR]*' | Only create message packages matching the given filter expression. FILTER_EXPR is the name of a package. It can start or end with * to filter for a ends-with or starts-with exression. | 
+| -- filter 'FILTER_EXPR[ FILTER_EXPR]*' | Only create message packages matching the given filter expression. FILTER_EXPR is the name of a package. It can start or end with * to filter for a ends-with or starts-with exression. Seperate multiple FILTER_EXPR with a space or comma | 
 | --nupkg | [Default] Create nuget package. |
 | --dll | Create dll. |
 
