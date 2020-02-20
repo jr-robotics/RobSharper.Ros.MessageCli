@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
@@ -11,7 +12,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
     {
         public static int Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine)
         {
-            var context = CodeGenerationContext.Create(options.PackagePath);
+            CodeGenerationContext context;
+
+            try
+            {
+                context = CodeGenerationContext.Create(options.PackagePath);
+            }
+            catch (DirectoryNotFoundException e)
+            {
+                Colorful.Console.WriteLine(e.Message, Color.Red);
+                return 2;
+            }
 
             if (!context.Packages.Any())
             {

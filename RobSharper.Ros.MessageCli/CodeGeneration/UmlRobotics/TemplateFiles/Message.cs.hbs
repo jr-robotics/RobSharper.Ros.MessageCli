@@ -46,8 +46,7 @@ namespace {{Package.Namespace}}
         {{/each}}
         {{#each Fields}}
         [RosMessageField({{Index}}, "{{RosType}}", "{{RosIdentifier}}")]
-        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; }
-            {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
+        public {{{Type.InterfaceName}}} {{Identifier}} {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}(){{/unless}};
         
         {{/each}}
 

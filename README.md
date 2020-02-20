@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc2
+dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc3
 ```
 
 ## Usage
