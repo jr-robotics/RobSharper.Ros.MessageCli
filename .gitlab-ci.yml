@@ -55,7 +55,7 @@ nuget-pack:
 # Deploy to JR BaGet server
 # This is done for all pushes of version tags (v*) automatically
 # Pushes to the master branch and web pipeline triggers must be deployed manually
-.baget_base: &baget_base
+.baget_base:
   stage: deploy
   dependencies:
     - nuget-pack
@@ -63,7 +63,7 @@ nuget-pack:
     GIT_STRATEGY: none
   environment:
     name: JR BaGet
-    url: http://robv005:33333/
+    url: https://robotics-baget.joanneum.at
   script:
     - 'cd nuget'
     - 'dotnet nuget push *.nupkg -s $JR_BAGET_URL -k $JR_BAGET_API_KEY'
@@ -71,7 +71,7 @@ nuget-pack:
     - docker-executor
 
 baget auto:
-  <<: *baget_base
+  extends: .baget_base
   only:
     - /^v.*$/
   except:
@@ -79,7 +79,7 @@ baget auto:
     - schedules
 
 baget manual:
-  <<: *baget_base
+  extends: .baget_base
   only:
     - develop
     - master
