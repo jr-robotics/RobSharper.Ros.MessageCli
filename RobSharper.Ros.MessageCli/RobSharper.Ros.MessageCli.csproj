@@ -27,7 +27,7 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.4" />
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.4" />
       <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.4" />
-      <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.0.1" />
+      <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.6.1" />
       <PackageReference Include="RobSharper.Ros.MessageParser" Version="2.0.1" />
       <PackageReference Include="RobSharper.Ros.PackageXml" Version="1.1.0" />
     </ItemGroup>
