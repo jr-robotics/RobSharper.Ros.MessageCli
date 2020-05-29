@@ -7,7 +7,7 @@
         <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
         <Description>ROSMSG builds your message packages</Description>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageEssentials.git</RepositoryUrl>
+        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageCli.git</RepositoryUrl>
         <PackageTags>ROS;RobSharper;RobSharper.Ros;ROS.Messages;</PackageTags>
 
         <PackAsTool>true</PackAsTool>
