@@ -12,7 +12,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Build_dependency_graph_finds_packages_which_have_to_be_present()
         {
-            var package = TestUtils.CreatePackageInfo("common_msgs", "nav_msgs");
+            var package = TestUtils.CreatePackageInfo(true, "common_msgs", "nav_msgs");
             var target = CreateParser(package);
             
             target.ParseMessages();

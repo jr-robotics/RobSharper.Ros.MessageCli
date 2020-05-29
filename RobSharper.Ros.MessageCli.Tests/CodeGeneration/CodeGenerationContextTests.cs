@@ -12,7 +12,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Can_create_CodeGenerationContext_for_standard_package()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "std_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("std_msgs"));
 
             context.Should().NotBeNull();
 
@@ -23,13 +23,13 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
 
             package.Name.Should().Be("std_msgs");
             package.IsMetaPackage.Should().BeFalse();
-            package.PackageDirectory.FullName.Should().Be(Path.GetFullPath(Path.Combine("TestPackages", "std_msgs")));
+            package.PackageDirectory.FullName.Should().Be(Path.GetFullPath(TestUtils.CreatePackagePath("std_msgs")));
         }
         
         [Fact]
         public void Can_create_CodeGenerationContext_for_nested_package()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "control_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("control_msgs"));
 
             context.Should().NotBeNull();
 
@@ -40,13 +40,13 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
             
             package.Name.Should().Be("control_msgs");
             package.IsMetaPackage.Should().BeFalse();
-            package.PackageDirectory.FullName.Should().Be(Path.GetFullPath(Path.Combine("TestPackages", "control_msgs", "control_msgs")));
+            package.PackageDirectory.FullName.Should().Be(Path.GetFullPath(TestUtils.CreatePackagePath("control_msgs", "control_msgs")));
         }
         
         [Fact]
         public void Can_create_CodeGenerationContext_for_meta_package()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "common_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("common_msgs"));
 
             context.Should().NotBeNull();
 
@@ -59,7 +59,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Can_reorder_packages_for_building_if_only_one_package_should_be_built()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "std_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("std_msgs"));
             
             context.ReorderPackagesForBuilding();
             context.Packages.Count().Should().Be(1);
@@ -68,7 +68,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Can_reorder_packages_for_building_dependent_packages()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "common_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("common_msgs"));
             
             context.ReorderPackagesForBuilding();
             context.Packages.Count().Should().Be(10);
@@ -78,7 +78,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Reorder_packages_for_building_throws_exception_if_circular_dependencies_detected()
         {
-            var context = CodeGenerationContext.Create(Path.Combine("TestPackages", "circular_msgs"));
+            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath(false, "circular_msgs"));
 
             context.Invoking(x => x.ReorderPackagesForBuilding())
                 .Should().Throw<CircularPackageDependencyException>();

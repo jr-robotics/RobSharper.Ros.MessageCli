@@ -166,23 +166,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
         private void CopyOutput()
         {
-            var nupkgFileName = $"{_data.Package.Namespace}.{_data.Package.Version}.nupkg";
-            var nupkgSourceFile = new FileInfo(Path.Combine(_directories.TempDirectory.FullName, "bin", "Release", nupkgFileName));
+            var nugetFileName = $"{_data.Package.Namespace}.{_data.Package.Version}";
             
-            // Copy nuget package to temp package source, so it can be consumed by other projects in the current build pipeline
-            var nugetTempDestination = new FileInfo(Path.Combine(_directories.NugetTempDirectory.FullName, nupkgFileName));
-            ReplaceFiles(nupkgSourceFile, nugetTempDestination);
+            var nupkgFileName = $"{nugetFileName}.nupkg";
+            var snupkgFileName = $"{nugetFileName}.snupkg";
             
-            
-            // Copy nuget package to output directory if requested
-            if (_options.CreateNugetPackage)
-            {
-                var nupkgDestinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, nupkgFileName));
-                
-                ReplaceFiles(nupkgSourceFile, nupkgDestinationFile);
-            }
+            CopyNugetFile(nupkgFileName);
+            CopyNugetFile(snupkgFileName);
 
-            
             // Copy dll to output directory if requested
             if (_options.CreateDll)
             {
@@ -192,6 +183,22 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 var dllDestinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, dllFileName));
                 
                 ReplaceFiles(dllSourceFile, dllDestinationFile);
+            }
+        }
+
+        private void CopyNugetFile(string fileName)
+        {
+            var sourceFile = new FileInfo(Path.Combine(_directories.TempDirectory.FullName, "bin", "Release", fileName));
+
+            // Copy nuget package to temp package source, so it can be consumed by other projects in the current build pipeline
+            var tempDestinationFile = new FileInfo(Path.Combine(_directories.NugetTempDirectory.FullName, fileName));
+            ReplaceFiles(sourceFile, tempDestinationFile);
+
+            // Copy nuget package to output directory if requested
+            if (_options.CreateNugetPackage)
+            {
+                var destinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, fileName));
+                ReplaceFiles(sourceFile, destinationFile);
             }
         }
 

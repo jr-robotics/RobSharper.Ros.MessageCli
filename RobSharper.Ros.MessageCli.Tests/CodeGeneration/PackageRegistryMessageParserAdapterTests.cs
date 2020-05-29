@@ -37,7 +37,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void Parse_messages_adds_dependencies_to_package_registry()
         {
-            var package = TestUtils.CreatePackageInfo("common_msgs", "nav_msgs");
+            var package = TestUtils.CreatePackageInfo(true, "common_msgs", "nav_msgs");
             var buildPackages = CreateBuildPackages(package);
             
             var innerParser = new RosMessagePackageParser(package, buildPackages);

@@ -2,12 +2,12 @@ image: mcr.microsoft.com/dotnet/core/sdk:3.1
 
 stages:
   - test
-  - publish
+  - pack
+  - integration-test
   - deploy
 
 test cli:
   stage: test
-  image: mcr.microsoft.com/dotnet/core/sdk:2.1
   script:
     - 'cd RobSharper.Ros.MessageCli.Tests'
     - "dotnet test --logger \"junit\" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=\"$PWD/coverage/\" /p:Exclude=\"[xunit*]*%2C[RobSharper.Ros.MessageCli.Tests]*\" /p:ExcludeByAttribute=\"GeneratedCodeAttribute%2CObsolete%2CCompilerGeneratedAttribute\""
@@ -26,29 +26,63 @@ test cli:
 # Create a versioned NuGet package
 # This task is only executed for the branches develop and master as well as version tags
 nuget-pack:
-  stage: publish
-  only:
-    - develop
-    - master
-    - /^v.*$/
+  stage: pack
+#  only:
+#    - develop
+#    - master
+#    - /^v.*$/
   script:
     - 'export X_CI_VERSION=$(git describe | cut -c 2-)'
-    - 'echo Publishing version $X_CI_VERSION'
+    - 'echo Packing version $X_CI_VERSION'
     - 'cd RobSharper.Ros.MessageCli'
     - 'dotnet pack -c Release -o ../nuget/ -p:Version=$X_CI_VERSION -p:SymbolPackageFormat=snupkg --include-symbols'
+    - 'echo $X_CI_VERSION > ../version.txt'
   artifacts:
     paths:
       - 'nuget'
       - 'RobSharper.Ros.MessageCli/bin/Release/'
+      - 'version.txt'
   tags:
     - docker-executor
 
+
+# Test package generation with built nuget global tool
+.generate_msgs:
+  stage: integration-test
+  tags:
+    - docker-executor
+  needs:
+    - nuget-pack
+  script:
+    - 'export X_CI_VERSION=$(git describe | cut -c 2-)'
+    - 'export PATH="$PATH:/root/.dotnet/tools"'
+    - 'echo Generating .Net messages for ROS packages'
+    - 'echo RobSharper.Ros.MessageCli version: $X_CI_VERSION'
+    - 'echo .Net Core version: $(dotnet --version)'
+    - 'dotnet --list-sdks'
+    - 'dotnet tool install --add-source ./nuget -g RobSharper.Ros.MessageCli --version $X_CI_VERSION'
+    - 'dotnet rosmsg config feeds add "Robotics BaGet" --source https://robotics-baget.joanneum.at/v3/index.json --protocol 3'
+    - 'dotnet rosmsg config feeds'
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget-testresults --nupkg'
+  artifacts:
+    paths:
+      - ros-nuget-testresults
+
+test netcoreapp2_1:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/core/sdk:2.1
+
+test netcoreapp3_1:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/core/sdk:3.1
 
 # Deploy to JR BaGet server
 # This is done for all pushes of version tags (v*) automatically
 # Pushes to the master branch and web pipeline triggers must be deployed manually
 .baget_base:
   stage: deploy
+  needs:
+    - nuget-pack
   dependencies:
     - nuget-pack
   variables:
@@ -72,9 +106,8 @@ baget auto:
 
 baget manual:
   extends: .baget_base
-  only:
-    - develop
-    - master
+  except:
+    - /^v.*$/
   when: manual
 
 
