@@ -51,20 +51,18 @@ nuget-pack:
   stage: integration-test
   tags:
     - docker-executor
-  variables:
-    GIT_STRATEGY: none
   needs:
     - nuget-pack
   script:
-    - export X_CI_VERSION=$(cat version.txt)
-    - export PATH="$PATH:/root/.dotnet/tools"
+    - 'export X_CI_VERSION=$(git describe | cut -c 2-)'
+    - 'export PATH="$PATH:/root/.dotnet/tools"'
     - 'echo Generating .Net messages for ROS packages'
     - 'echo RobSharper.Ros.MessageCli version: $X_CI_VERSION'
     - 'echo .Net Core version: $(dotnet --version)'
-    - dotnet tool install --add-source ./nuget -g RobSharper.Ros.MessageCli --version $X_CI_VERSION
-    - dotnet rosmsg config feeds add "Robotics BaGet" --source https://robotics-baget.joanneum.at/v3/index.json --protocol 3
-    - dotnet rosmsg config feeds
-    - dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget --nupkg
+    - 'dotnet tool install --add-source ./nuget -g RobSharper.Ros.MessageCli --version $X_CI_VERSION'
+    - 'dotnet rosmsg config feeds add "Robotics BaGet" --source https://robotics-baget.joanneum.at/v3/index.json --protocol 3'
+    - 'dotnet rosmsg config feeds'
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget --nupkg'
   artifacts:
     paths:
       - ros-nuget
