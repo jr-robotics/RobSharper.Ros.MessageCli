@@ -27,10 +27,6 @@ test cli:
 # This task is only executed for the branches develop and master as well as version tags
 nuget-pack:
   stage: pack
-#  only:
-#    - develop
-#    - master
-#    - /^v.*$/
   script:
     - 'export X_CI_VERSION=$(git describe | cut -c 2-)'
     - 'echo Packing version $X_CI_VERSION'
@@ -63,9 +59,10 @@ nuget-pack:
     - 'dotnet rosmsg config feeds add "Robotics BaGet" --source https://robotics-baget.joanneum.at/v3/index.json --protocol 3'
     - 'dotnet rosmsg config feeds'
     - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget-testresults --nupkg'
-  artifacts:
-    paths:
-      - ros-nuget-testresults
+#  artifacts:
+#    paths:
+#      - ros-nuget-testresults
+#    expire_in: 1 week
 
 test netcoreapp2_1:
   extends: .generate_msgs
@@ -80,10 +77,10 @@ test netcoreapp3_1:
 # Pushes to the master branch and web pipeline triggers must be deployed manually
 .baget_base:
   stage: deploy
-  needs:
-    - nuget-pack
-  dependencies:
-    - nuget-pack
+  only:
+    - develop
+    - master
+    - /^v.*$/
   variables:
     GIT_STRATEGY: none
   environment:
