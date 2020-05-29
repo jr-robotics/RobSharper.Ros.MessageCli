@@ -56,7 +56,7 @@ nuget-pack:
   needs:
     - nuget-pack
   script:
-    - export X_CI_VERSION=$(cut version.txt)
+    - export X_CI_VERSION=$(cat version.txt)
     - export PATH="$PATH:/root/.dotnet/tools"
     - 'echo Generating .Net messages for ROS packages'
     - 'echo RobSharper.Ros.MessageCli version: $X_CI_VERSION'
