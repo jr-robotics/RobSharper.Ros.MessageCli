@@ -158,6 +158,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 }
                 catch (ProcessFailedException e)
                 {
+                    Environment.ExitCode |= (int) ExitCodes.CouldNotAddDependency;
                     throw new DependencyNotFoundException(dependency,
                         $"Could not add dependency {dependency}.", e);
                 }

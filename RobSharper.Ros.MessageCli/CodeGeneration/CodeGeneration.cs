@@ -10,7 +10,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public static partial class CodeGeneration
     {
-        public static int Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine)
+        public static void Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine)
         {
             CodeGenerationContext context;
 
@@ -21,13 +21,15 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             catch (DirectoryNotFoundException e)
             {
                 Colorful.Console.WriteLine(e.Message, Color.Red);
-                return 2;
+                Environment.ExitCode |= (int) ExitCodes.RosPackagePathNotFound;
+                return;
             }
 
             if (!context.Packages.Any())
             {
                 Colorful.Console.WriteLine("Package directory does not contain any packages.");
-                return 0;
+                Environment.ExitCode |= (int) ExitCodes.Success;
+                return;
             }
             
             using (var directories = new CodeGenerationDirectoryContext(options.OutputPath, options.PreserveGeneratedCode))
@@ -65,13 +67,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                         Colorful.Console.WriteLine($"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]", Color.Red);
                         Colorful.Console.WriteLine(e.Message, Color.Red);
                         Colorful.Console.WriteLine();
+
+                        if (Environment.ExitCode == 0)
+                            Environment.ExitCode |= (int) ExitCodes.UnhandledException;
                         
-                        return 1;
+                        return;
                     }
                 }
             }
-
-            return 0;
         }
     }
 }
