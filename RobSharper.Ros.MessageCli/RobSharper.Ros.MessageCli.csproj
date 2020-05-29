@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <Authors>Guido Breitenhuber</Authors>
+        <Copyright>JOANNEUM RESEARCH Forschungsgesellschaft mbH</Copyright>
+        <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
+        <Description>ROSMSG builds your message packages</Description>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageEssentials.git</RepositoryUrl>
+        <PackageTags>ROS;RobSharper;RobSharper.Ros;ROS.Messages;</PackageTags>
+
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>dotnet-rosmsg</ToolCommandName>
+        <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
+      <PackageReference Include="Colorful.Console" Version="1.2.10" />
+      <PackageReference Include="CommandLineParser" Version="2.8.0" />
+      <PackageReference Include="Handlebars.Net" Version="1.10.1" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.4" />
+      <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.6.1" />
+      <PackageReference Include="RobSharper.Ros.MessageParser" Version="2.0.1" />
+      <PackageReference Include="RobSharper.Ros.PackageXml" Version="1.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+      <None Update="config.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <!-- Copy templates -->
+    <ItemGroup>
+        <Content Include="CodeGeneration\UmlRobotics\TemplateFiles\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+</Project>

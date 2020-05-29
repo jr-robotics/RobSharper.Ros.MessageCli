@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AssemblyName>{{Namespace}}</AssemblyName>
+        <Version>{{Version}}</Version>
+        <PackageVersion>{{Version}}</PackageVersion>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageTags>ROS;ROS.Messages;RobSharper;Uml.Robotics</PackageTags>
+        {{#if HasDescription}}
+        <PackageDescription>{{Description}}</PackageDescription>
+        {{/if}}
+        {{#if HasProjectUrl}}
+        <PackageProjectUrl>{{ProjectUrl}}</PackageProjectUrl>
+        {{/if}}
+        {{#if HasRepositoryUrl}}
+        <RepositoryUrl>{{RepositoryUrl}}</RepositoryUrl>
+        {{/if}}
+        {{#if HasAuthors}}
+        <Authors>{{AuthorsString}}</Authors>
+        {{/if}}
+        
+        <NoWarn>168;219</NoWarn>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="RobSharper.Ros.MessageEssentials" Version="1.0.1" />
+        <PackageReference Include="RobSharper.Ros.Adapters.UmlRobotics" Version="1.0.0" />
+    </ItemGroup>
+</Project>
