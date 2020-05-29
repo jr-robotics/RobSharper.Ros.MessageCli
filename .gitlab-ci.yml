@@ -66,7 +66,7 @@ nuget-pack:
     - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget --nupkg'
   artifacts:
     paths:
-      - ros-nuget
+      - ros-nuget-testresults
 
 test netcoreapp2_1:
   extends: .generate_msgs
@@ -106,9 +106,8 @@ baget auto:
 
 baget manual:
   extends: .baget_base
-  only:
-    - develop
-    - master
+  except:
+    - /^v.*$/
   when: manual
 
 
