@@ -49,7 +49,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
 
                 // Set build order depending on package dependencies
-                context.ReorderPackagesForBuilding();
+                try
+                {
+                    context.ReorderPackagesForBuilding();
+                }
+                catch (Exception e)
+                {
+                    Colorful.Console.WriteLine(e.Message, Color.Red);
+                    Environment.ExitCode |= (int) ExitCodes.CouldNotDetermineBuildSequence;
+                        
+                    return;
+                }
                 
                 foreach (var package in context.Packages)
                 {
@@ -68,8 +78,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                         Colorful.Console.WriteLine(e.Message, Color.Red);
                         Colorful.Console.WriteLine();
 
-                        if (Environment.ExitCode == 0)
-                            Environment.ExitCode |= (int) ExitCodes.UnhandledException;
+                        Environment.ExitCode |= (int) ExitCodes.CouldNotProcessPackage;
                         
                         return;
                     }
