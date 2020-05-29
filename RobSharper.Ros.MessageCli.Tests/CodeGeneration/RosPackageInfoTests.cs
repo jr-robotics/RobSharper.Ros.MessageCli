@@ -11,7 +11,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void HasMessages_returns_true_if_package_contains_msg_file()
         {
-            var packageFolder = TestUtils.CreatePackagePath("msg_msgs");
+            var packageFolder = TestUtils.CreatePackagePath("test_msg_msgs");
             var package = RosPackageInfo.Create(packageFolder);
 
             package.HasMessages.Should().BeTrue();
@@ -23,7 +23,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void HasMessages_returns_true_if_package_contains_srv_file()
         {
-            var packageFolder = TestUtils.CreatePackagePath("srv_msgs");
+            var packageFolder = TestUtils.CreatePackagePath("test_srv_msgs");
             var package = RosPackageInfo.Create(packageFolder);
 
             package.HasMessages.Should().BeTrue();
@@ -35,7 +35,7 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
         [Fact]
         public void HasMessages_returns_true_if_package_contains_action_file()
         {
-            var packageFolder = TestUtils.CreatePackagePath("action_msgs");
+            var packageFolder = TestUtils.CreatePackagePath("test_action_msgs");
             var package = RosPackageInfo.Create(packageFolder);
 
             package.HasMessages.Should().BeTrue();

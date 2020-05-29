@@ -8,7 +8,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
 {
     public static class ConfigurationProgram
     {
-        public static int Execute(ConfigurationOptions options)
+        public static void Execute(ConfigurationOptions options)
         {
             var configuration = LoadConfiguration();
             
@@ -27,7 +27,6 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     RemoveConfigValue(options, configuration);
                     break;
             }
-            return 0;
         }
 
         private static void ShowConfigValues(ConfigurationOptions options, CodeGenerationConfiguration configuration)
@@ -53,7 +52,6 @@ namespace RobSharper.Ros.MessageCli.Configuration
                             .Max();
 
                         const string NameHeader = "Name                    ";
-                        var nameLength = Math.Max(NameHeader.Length, maxNameLength);
                         
                         Console.WriteLine($"{"Name",-24} Source");
                         foreach (var feed in configuration.NugetFeeds)
@@ -65,6 +63,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     break;
                 default:
                     Console.WriteLine($"Show configuration element {options.ConfigurationElement} is not supported");
+                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
             }
         }
@@ -84,6 +83,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     {
                         Console.WriteLine($"Set configuration element {options.ConfigurationElement} does not support value {value}");
                         Console.WriteLine("You can either choose 'nupkg' or 'dll'");
+                        Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     }
                     else
                     {
@@ -94,9 +94,11 @@ namespace RobSharper.Ros.MessageCli.Configuration
                 case ConfigurationOptions.ConfigurationElements.Feeds:
                     Console.WriteLine($"Set configuration element {options.ConfigurationElement} is not supported");
                     Console.WriteLine($"Use commands 'add' or 'remove'");
+                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
                 default:
                     Console.WriteLine($"Set configuration element {options.ConfigurationElement} is not supported");
+                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
             }
         }
@@ -111,6 +113,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     if (string.IsNullOrEmpty(feedName))
                     {
                         Console.WriteLine("No feed name provided");
+                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
                     }
                     else
                     {
@@ -120,6 +123,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                         if (feedItem == null)
                         {
                             Console.WriteLine($"No feed with name {feedName} found");
+                            Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
                         }
                         else
                         {
@@ -133,6 +137,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     break;
                 default:
                     Console.WriteLine($"Remove configuration element {options.ConfigurationElement} is not supported");
+                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
             }
         }
@@ -147,6 +152,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     if (string.IsNullOrEmpty(feedName))
                     {
                         Console.WriteLine("No feed name provided (use option -name)");
+                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
                         break;
                     }
 
@@ -154,6 +160,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     if (string.IsNullOrEmpty(source))
                     {
                         Console.WriteLine("No feed source provided (use option -source)");
+                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedSource;
                         break;
                     }
                     
@@ -163,6 +170,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     if (feedItemExists)
                     {
                         Console.WriteLine($"Feed with name {feedName} already exists");
+                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
                     }
                     else
                     {
@@ -182,6 +190,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     break;
                 default:
                     Console.WriteLine($"Remove configuration element {options.ConfigurationElement} is not supported");
+                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
             }
         }

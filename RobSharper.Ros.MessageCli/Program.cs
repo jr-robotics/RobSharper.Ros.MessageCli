@@ -32,7 +32,7 @@ namespace RobSharper.Ros.MessageCli
                     settings.CaseInsensitiveEnumValues = true;
                 });
                 
-                commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions>(args)
+                var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions>(args)
                     .MapResult(
                         (CodeGenerationOptions options) =>
                         {
@@ -47,15 +47,18 @@ namespace RobSharper.Ros.MessageCli
                                 .ToList() ?? Enumerable.Empty<string>();
                             
                             var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                            return CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                            CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                            return 0;
                         },
                         (ConfigurationOptions options) =>
                         {
-                            return ConfigurationProgram.Execute(options);
+                            ConfigurationProgram.Execute(options);
+                            return 0;
                         },
                         errs =>
                         {
-                            return 1;
+                            Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
+                            return 0;
                         });
             }
         }

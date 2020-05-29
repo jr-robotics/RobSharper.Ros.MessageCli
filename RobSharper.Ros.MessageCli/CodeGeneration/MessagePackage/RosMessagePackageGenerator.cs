@@ -63,6 +63,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         public void Execute()
         {
             Colorful.Console.WriteLine($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            Colorful.Console.WriteLine(Package.PackageInfo.PackageDirectory.FullName);
+            
             CreateProjectFile();
             AddNugetDependencies();
         
@@ -158,6 +160,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 }
                 catch (ProcessFailedException e)
                 {
+                    Environment.ExitCode |= (int) ExitCodes.CouldNotAddDependency;
                     throw new DependencyNotFoundException(dependency,
                         $"Could not add dependency {dependency}.", e);
                 }
