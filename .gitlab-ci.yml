@@ -59,6 +59,7 @@ nuget-pack:
     - 'echo Generating .Net messages for ROS packages'
     - 'echo RobSharper.Ros.MessageCli version: $X_CI_VERSION'
     - 'echo .Net Core version: $(dotnet --version)'
+    - 'dotnet --list-sdks'
     - 'dotnet tool install --add-source ./nuget -g RobSharper.Ros.MessageCli --version $X_CI_VERSION'
     - 'dotnet rosmsg config feeds add "Robotics BaGet" --source https://robotics-baget.joanneum.at/v3/index.json --protocol 3'
     - 'dotnet rosmsg config feeds'
