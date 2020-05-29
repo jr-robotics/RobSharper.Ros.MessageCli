@@ -1,9 +1,11 @@
 # dotnet ROSMSG
 
+dotnet ROSMSG is a .Net Core global tool used to build .Net Packages from ROS message packages.
+ 
 ## Installation
 
 ```
-dotnet tool install -g RobSharper.Ros.MessageCli --version 1.0.0-rc3
+dotnet tool install -g RobSharper.Ros.MessageCli
 ```
 
 ## Usage
@@ -20,7 +22,7 @@ dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--filter 
 
 
 
-Use help option to get help:
+Use help option to get further help:
 ```
 dotnet rosmsg build --help
 ```
@@ -32,7 +34,8 @@ dotnet rosmsg config --help
 ```
 
 ### Custom NuGet feeds
-ROSMSG support custom nuget feeds.
+ROSMSG supports custom NuGet feeds.
+The official NuGet feed nuget.org is added by default.
 
 List configured NuGet feeds:
 ```
