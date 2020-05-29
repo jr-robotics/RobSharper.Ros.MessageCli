@@ -1,0 +1,4 @@
+# Get an A with a tolerance  
+float32 tolerance
+---
+int32 a
