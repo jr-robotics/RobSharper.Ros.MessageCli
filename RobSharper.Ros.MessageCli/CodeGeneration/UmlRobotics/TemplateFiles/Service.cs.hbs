@@ -6,7 +6,7 @@ namespace {{Package.Namespace}}
     public partial class {{ServiceType.TypeName}} : RosService
     {
         private static readonly IRosServiceInfo ServiceInfo = new DescriptorBasedRosServiceInfo(
-            RosType.Parse("{{ServiceType.RosTypeName}}"), 
+            RosType.Parse("{{Package.RosName}}/{{ServiceType.RosTypeName}}"), 
             {{RequestType.TypeName}}.TypeInfoProvider.TypeInfo, 
             {{ResponseType.TypeName}}.TypeInfoProvider.TypeInfo);
 
