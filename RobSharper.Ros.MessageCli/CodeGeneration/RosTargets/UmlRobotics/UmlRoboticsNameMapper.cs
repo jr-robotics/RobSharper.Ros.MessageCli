@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
-namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
+namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
 {
     public class UmlRoboticsNameMapper : NameMapper
     {

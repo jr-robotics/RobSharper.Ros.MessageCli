@@ -43,7 +43,7 @@
 
     <!-- Copy templates -->
     <ItemGroup>
-        <Content Include="CodeGeneration\UmlRobotics\TemplateFiles\*.*">
+        <Content Include="CodeGeneration\RosTargets\UmlRobotics\TemplateFiles\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>

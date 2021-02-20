@@ -1,12 +1,12 @@
 using System.IO;
 using System.Reflection;
 
-namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
+namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
 {
     public static class TemplatePaths
     {
         public static readonly string TemplatesDirectory =
-            Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "CodeGeneration", "UmlRobotics",
+            Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "CodeGeneration", "RosTargets", "UmlRobotics",
                 "TemplateFiles");
 
         public const string ProjectFile = "csproj.hbs";
