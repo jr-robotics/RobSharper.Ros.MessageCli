@@ -4,6 +4,7 @@ using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CommandLine;
+using CommandLine.Text;
 using HandlebarsDotNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,20 +34,22 @@ namespace RobSharper.Ros.MessageCli
                     settings.CaseInsensitiveEnumValues = true;
                 });
 
-                var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args)
+                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args);
+
+                var result = parserResult
                     .MapResult(
                         (CodeGenerationOptions options) =>
                         {
                             var config = configuration.GetSection("Build");
                             var configObject = new CodeGenerationConfiguration();
                             config.Bind(configObject);
-                            
+
                             options.SetDefaultBuildAction(configObject.DefaultBuildAction);
                             options.SetDefaultRootNamespace(configObject.RootNamespace);
                             options.NugetFeedXmlSources = configObject.NugetFeeds?
                                 .Select(f => f.GetXmlString())
                                 .ToList() ?? Enumerable.Empty<string>();
-                            
+
                             var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
                             CodeGeneration.CodeGeneration.Execute(options, templateEngine);
                             return 0;
@@ -54,10 +57,6 @@ namespace RobSharper.Ros.MessageCli
                         (FeedConfigurationOptions options) =>
                         {
                             ConfigurationProgram.Execute(options);
-
-                            if (Environment.ExitCode != 0)
-                                throw new NotSupportedException();
-                            
                             return 0;
                         },
                         (NamespaceConfigurationOptions options) =>
@@ -75,7 +74,28 @@ namespace RobSharper.Ros.MessageCli
                             Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
                             return 0;
                         });
+
+                
+                if (result != 0 || Environment.ExitCode != 0)
+                {
+                    PrintUsage(parserResult);
+
+                    if (result != 0)
+                        Environment.ExitCode = result;
+                }
             }
+        }
+
+        private static void PrintUsage(ParserResult<object> parserResult)
+        {
+            var h = HelpText.RenderUsageText(parserResult);
+
+            if (string.IsNullOrEmpty(h))
+                return;
+            
+            Console.WriteLine();
+            Console.WriteLine("USAGE:");
+            Console.WriteLine(h);
         }
 
         private static IContainer CreateContainer(IConfiguration configuration)
