@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
+using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using Console = Colorful.Console;
 
@@ -65,7 +66,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
-                    var generator = new RosMessagePackageGenerator(package, options, packageDirectories, templateEngine);
+                    var generator = new UmlRoboticsMessagePackageGenerator(package, options, packageDirectories, templateEngine);
 
                     try
                     {

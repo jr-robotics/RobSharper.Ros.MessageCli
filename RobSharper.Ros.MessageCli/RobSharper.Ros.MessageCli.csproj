@@ -47,5 +47,8 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="CodeGeneration\RosTargets\RobSharper" />
+    </ItemGroup>
 
 </Project>

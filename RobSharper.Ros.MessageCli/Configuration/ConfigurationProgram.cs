@@ -73,8 +73,6 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     .NugetFeeds
                     .Select(f => f.Name.Length)
                     .Max();
-
-                const string NameHeader = "Name                    ";
                         
                 Console.WriteLine($"{"Name",-24} Source");
                 foreach (var feed in configuration.NugetFeeds)

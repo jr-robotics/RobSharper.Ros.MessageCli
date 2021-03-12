@@ -4,37 +4,55 @@ using System.Drawing;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
-using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 {
-    public class RosMessagePackageGenerator : IRosPackageGenerator
+    public abstract class RosMessagePackageGenerator : IRosPackageGenerator
     {
-        private readonly CodeGenerationOptions _options;
         private readonly ProjectCodeGenerationDirectoryContext _directories;
         private readonly IKeyedTemplateFormatter _templateEngine;
 
         private readonly dynamic _data;
         
         private string _projectFilePath;
+        
+        
+        protected CodeGenerationOptions Options { get; }
+        
+        protected CodeGenerationPackageContext Package { get; }
 
-        private readonly NameMapper _nameMapper;
+        private NameMapper _nameMapper;
 
-        public CodeGenerationPackageContext Package { get; }
+        protected NameMapper NameMapper
+        {
+            get
+            {
+                if (_nameMapper == null)
+                    _nameMapper = GetNameMapper();
 
-        public RosMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
+                return _nameMapper;
+            }
+        }
+
+        protected abstract string ProjectTemplateFilePath { get; }
+        protected abstract string NugetConfigTemplateFilePath { get; }
+        protected abstract string MessageTemplateFilePath { get; }
+        protected abstract string ServiceTemplateFilePath { get; }
+        protected abstract string ActionTemplateFilePath { get; }
+
+        protected virtual bool GenerateActionFile => ActionTemplateFilePath != null;
+        protected virtual bool GenerateServiceFile => ServiceTemplateFilePath != null;
+
+        protected RosMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
             ProjectCodeGenerationDirectoryContext directories, IKeyedTemplateFormatter templateEngine)
         {
             Package = package ?? throw new ArgumentNullException(nameof(package));
             
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            Options = options ?? throw new ArgumentNullException(nameof(options));
             _directories = directories ?? throw new ArgumentNullException(nameof(directories));
             _templateEngine = templateEngine ?? throw new ArgumentNullException(nameof(templateEngine));
-
-            var namespaceTemplate = (options.RootNamespace + ".{{Name}}").TrimStart('.');
-            _nameMapper = new UmlRoboticsNameMapper(Package.PackageInfo.Name, new StaticHandlebarsTemplateFormatter(namespaceTemplate));
             
             _data = new ExpandoObject();
         }
@@ -82,23 +100,25 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             Colorful.Console.WriteLine();
         }
 
+        protected abstract NameMapper GetNameMapper();
+
         private void CreateProjectFile()
         {
             EnsurePackageData();
 
             var projectFilePath = _directories.TempDirectory.GetFilePath($"{_data.Package.Namespace}.csproj");
-            var projectFileContent = _templateEngine.Format(TemplatePaths.ProjectFile, _data.Package);
+            var projectFileContent = _templateEngine.Format(ProjectTemplateFilePath, _data.Package);
             WriteFile(projectFilePath, projectFileContent);
 
             
             var nugetConfig = new
             {
                 TempNugetFolder = _directories.NugetTempDirectory.FullName,
-                NugetSources = _options.NugetFeedXmlSources
+                NugetSources = Options.NugetFeedXmlSources
             };
 
             var nugetConfigFilePath = _directories.TempDirectory.GetFilePath("nuget.config");
-            var nugetConfigFile = _templateEngine.Format(TemplatePaths.NugetConfigFile, nugetConfig);
+            var nugetConfigFile = _templateEngine.Format(NugetConfigTemplateFilePath, nugetConfig);
             WriteFile(nugetConfigFilePath, nugetConfigFile);
 
             _projectFilePath = projectFilePath;
@@ -178,7 +198,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             CopyNugetFile(snupkgFileName);
 
             // Copy dll to output directory if requested
-            if (_options.CreateDll)
+            if (Options.CreateDll)
             {
                 var dllFileName = $"{_data.Package.Namespace}.dll";
                 
@@ -198,7 +218,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             ReplaceFiles(sourceFile, tempDestinationFile);
 
             // Copy nuget package to output directory if requested
-            if (_options.CreateNugetPackage)
+            if (Options.CreateNugetPackage)
             {
                 var destinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, fileName));
                 ReplaceFiles(sourceFile, destinationFile);
@@ -271,6 +291,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         
         private void CreateAction(RosTypeInfo rosType, ActionDescriptor action)
         {
+            WriteActionInternal(rosType);
+            
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionGoal, action.Goal);
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionResult, action.Result);
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionFeedback, action.Feedback);
@@ -350,13 +372,16 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             };
 
             var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
-            var content = _templateEngine.Format(TemplatePaths.MessageFile, data);
-
+            var content = _templateEngine.Format(MessageTemplateFilePath, data);
+            
             WriteFile(filePath, content);
         }
 
         private void WriteServiceInternal(RosTypeInfo serviceType)
         {
+            if (!GenerateServiceFile)
+                return;
+            
             var typeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.Service);
             
             var data = new
@@ -381,9 +406,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             
 
             var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
-            var content = _templateEngine.Format(TemplatePaths.ServiceFile, data);
+            var content = _templateEngine.Format(ServiceTemplateFilePath, data);
 
             WriteFile(filePath, content);
+        }
+
+        private void WriteActionInternal(RosTypeInfo actionType)
+        {
+            if (!GenerateActionFile)
+                return;
+
+            throw new NotSupportedException("No need for this until now");
         }
         
         private void WriteFile(string filePath, string content)
