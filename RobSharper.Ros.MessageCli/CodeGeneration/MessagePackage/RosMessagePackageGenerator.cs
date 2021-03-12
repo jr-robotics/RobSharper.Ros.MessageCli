@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
@@ -13,17 +12,25 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
     {
         private readonly ProjectCodeGenerationDirectoryContext _directories;
         private readonly IKeyedTemplateFormatter _templateEngine;
-
-        private readonly dynamic _data;
         
         private string _projectFilePath;
+
+        private NameMapper _nameMapper;
+        private PackageTemplateData _packageTemplateData;
+
+        protected PackageTemplateData PackageTemplateData
+        {
+            get
+            {
+                EnsurePackageData();
+                return _packageTemplateData;
+            }
+        }
         
         
         protected CodeGenerationOptions Options { get; }
         
         protected CodeGenerationPackageContext Package { get; }
-
-        private NameMapper _nameMapper;
 
         protected NameMapper NameMapper
         {
@@ -53,29 +60,31 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             Options = options ?? throw new ArgumentNullException(nameof(options));
             _directories = directories ?? throw new ArgumentNullException(nameof(directories));
             _templateEngine = templateEngine ?? throw new ArgumentNullException(nameof(templateEngine));
-            
-            _data = new ExpandoObject();
         }
         
         private void EnsurePackageData()
         {
-            if (((IDictionary<string, object>)_data).ContainsKey("Package"))
+            if (_packageTemplateData != null)
                 return;
-            
-            _data.Package = new ExpandoObject();
-            _data.Package.RosName = Package.PackageInfo.Name;
-            _data.Package.Version = Package.PackageInfo.Version;
-            _data.Package.Name = Package.PackageInfo.Name.ToPascalCase();
-            _data.Package.Namespace = _nameMapper.GetNamespace(Package.PackageInfo.Name);
-            _data.Package.Description = Package.PackageInfo.Description;
-            _data.Package.HasDescription = !string.IsNullOrEmpty(Package.PackageInfo.Description);
-            _data.Package.ProjectUrl = Package.PackageInfo.ProjectUrl;
-            _data.Package.HasProjectUrl = !string.IsNullOrEmpty(Package.PackageInfo.ProjectUrl);
-            _data.Package.RepositoryUrl = Package.PackageInfo.RepositoryUrl;
-            _data.Package.HasRepositoryUrl = !string.IsNullOrEmpty(Package.PackageInfo.RepositoryUrl);
-            _data.Package.Authors = Package.PackageInfo.Authors;
-            _data.Package.HasAuthors = Package.PackageInfo.Authors != null && Package.PackageInfo.Authors.Any();
-            _data.Package.AuthorsString = string.Join(";", Package.PackageInfo.Authors ?? Enumerable.Empty<string>());
+
+            _packageTemplateData = CreatePackageData();
+        }
+
+        protected virtual PackageTemplateData CreatePackageData()
+        {
+            var data = new PackageTemplateData
+            {
+                RosName = Package.PackageInfo.Name,
+                Version = Package.PackageInfo.Version,
+                Name = Package.PackageInfo.Name.ToPascalCase(),
+                Namespace = _nameMapper.GetNamespace(Package.PackageInfo.Name),
+                Description = Package.PackageInfo.Description,
+                ProjectUrl = Package.PackageInfo.ProjectUrl,
+                RepositoryUrl = Package.PackageInfo.RepositoryUrl,
+                Authors = Package.PackageInfo.Authors,
+            };
+
+            return data;
         }
 
         public void Execute()
@@ -106,8 +115,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         {
             EnsurePackageData();
 
-            var projectFilePath = _directories.TempDirectory.GetFilePath($"{_data.Package.Namespace}.csproj");
-            var projectFileContent = _templateEngine.Format(ProjectTemplateFilePath, _data.Package);
+            var projectFilePath = _directories.TempDirectory.GetFilePath($"{PackageTemplateData.Namespace}.csproj");
+            var projectFileContent = _templateEngine.Format(ProjectTemplateFilePath, PackageTemplateData);
             WriteFile(projectFilePath, projectFileContent);
 
             
@@ -189,7 +198,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
         private void CopyOutput()
         {
-            var nugetFileName = $"{_data.Package.Namespace}.{_data.Package.Version}";
+            var nugetFileName = $"{PackageTemplateData.Namespace}.{PackageTemplateData.Version}";
             
             var nupkgFileName = $"{nugetFileName}.nupkg";
             var snupkgFileName = $"{nugetFileName}.snupkg";
@@ -200,7 +209,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             // Copy dll to output directory if requested
             if (Options.CreateDll)
             {
-                var dllFileName = $"{_data.Package.Namespace}.dll";
+                var dllFileName = $"{PackageTemplateData.Namespace}.dll";
                 
                 var dllSourceFile = new FileInfo(Path.Combine(_directories.TempDirectory.FullName, "bin", "Release", "netstandard2.0", dllFileName));
                 var dllDestinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, dllFileName));
@@ -347,13 +356,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 })
                 .ToList();
 
-            var typeName = _nameMapper.GetTypeName(rosType.TypeName, messageType);
-            var data = new
+            var data = new MessageTemplateData
             {
-                Package = _data.Package,
+                Package = PackageTemplateData,
                 RosTypeName = _nameMapper.GetRosTypeName(rosType.TypeName, messageType),
                 RosAbstractTypeName = rosType.TypeName,
-                TypeName = typeName,
+                TypeName = _nameMapper.GetTypeName(rosType.TypeName, messageType),
                 AbstractTypeName = _nameMapper.GetTypeName(rosType.TypeName, DetailedRosMessageType.None),
                 Fields = fields,
                 Constants = constants,
@@ -366,49 +374,69 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                     IsActionResult = messageType.HasFlag(DetailedRosMessageType.ActionResult),
                     IsActionFeedback = messageType.HasFlag(DetailedRosMessageType.ActionFeedback),
                     IsService = messageType.HasFlag(DetailedRosMessageType.Service),
-                    IsServiceRequest =  messageType.HasFlag(DetailedRosMessageType.ServiceRequest),
+                    IsServiceRequest = messageType.HasFlag(DetailedRosMessageType.ServiceRequest),
                     IsServiceResponse = messageType.HasFlag(DetailedRosMessageType.ServiceResponse)
                 }
             };
 
+            var typeName = data.TypeName;
             var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
             var content = _templateEngine.Format(MessageTemplateFilePath, data);
             
             WriteFile(filePath, content);
         }
 
+        public class MessageTemplateData
+        {
+            public PackageTemplateData Package { get; set; }
+            
+            public string RosTypeName { get; set; }
+            public string RosAbstractTypeName { get; set; }
+            
+            public string TypeName { get; set; }
+            public string AbstractTypeName { get; set; }
+            
+            public IEnumerable<object> Fields { get; set; }
+            
+            public IEnumerable<object> Constants { get; set; }
+            
+            public object MessageType { get; set; }
+        }
+        
         private void WriteServiceInternal(RosTypeInfo serviceType)
         {
             if (!GenerateServiceFile)
                 return;
             
-            var typeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.Service);
-            
-            var data = new
-            {
-                Package = _data.Package,
-                ServiceType = new
-                {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.Service),
-                    TypeName = typeName
-                },
-                RequestType = new
-                {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest),
-                    TypeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest)
-                },
-                ResponseType = new
-                {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse),
-                    TypeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse)
-                }
-            };
-            
-
-            var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
+            var data = GetServiceTemplateData(serviceType);
+            var filePath = _directories.TempDirectory.GetFilePath($"{data.ServiceType.TypeName}.cs");
             var content = _templateEngine.Format(ServiceTemplateFilePath, data);
 
             WriteFile(filePath, content);
+        }
+
+        protected virtual ServiceTemplateData GetServiceTemplateData(RosTypeInfo serviceType)
+        {
+            var data = new ServiceTemplateData
+            {
+                Package = PackageTemplateData,
+                ServiceType = new ConcreteTypeTemplateData
+                {
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.Service),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.Service)
+                },
+                RequestType = new ConcreteTypeTemplateData
+                {
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest)
+                },
+                ResponseType = new ConcreteTypeTemplateData
+                {
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse)
+                }
+            };
+            return data;
         }
 
         private void WriteActionInternal(RosTypeInfo actionType)
