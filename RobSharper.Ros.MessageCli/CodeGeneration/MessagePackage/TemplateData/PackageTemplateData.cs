@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
+namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData
 {
     public class PackageTemplateData
     {

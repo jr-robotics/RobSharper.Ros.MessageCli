@@ -1,4 +1,4 @@
-namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
+namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData
 {
     public class ServiceTemplateData
     {

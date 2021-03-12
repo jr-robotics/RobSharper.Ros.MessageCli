@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 {
-    public abstract class RosMessagePackageGenerator : IRosPackageGenerator
+    public abstract partial class RosMessagePackageGenerator : IRosPackageGenerator
     {
         private readonly ProjectCodeGenerationDirectoryContext _directories;
         private readonly IKeyedTemplateFormatter _templateEngine;
@@ -77,7 +78,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 RosName = Package.PackageInfo.Name,
                 Version = Package.PackageInfo.Version,
                 Name = Package.PackageInfo.Name.ToPascalCase(),
-                Namespace = _nameMapper.GetNamespace(Package.PackageInfo.Name),
+                Namespace = NameMapper.GetNamespace(Package.PackageInfo.Name),
                 Description = Package.PackageInfo.Description,
                 ProjectUrl = Package.PackageInfo.ProjectUrl,
                 RepositoryUrl = Package.PackageInfo.RepositoryUrl,
@@ -156,7 +157,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             {
                 messageNugetPackages = Package.Parser
                     .PackageDependencies
-                    .Select(x => _nameMapper.ResolveNugetPackageName(x))
+                    .Select(x => NameMapper.ResolveNugetPackageName(x))
                     .Distinct()
                     .ToList();
             }
@@ -164,7 +165,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             {
                 messageNugetPackages = Package.Parser
                     .ExternalTypeDependencies
-                    .Select(x => _nameMapper.ResolveNugetPackageName(x))
+                    .Select(x => NameMapper.ResolveNugetPackageName(x))
                     .Distinct()
                     .ToList();
             }
@@ -280,7 +281,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         
         private void CreateService(RosTypeInfo rosType, ServiceDescriptor service)
         {
-            if (_nameMapper.IsBuiltInType(rosType))
+            if (NameMapper.IsBuiltInType(rosType))
                 return;
 
             WriteServiceInternal(rosType);
@@ -316,11 +317,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 throw new ArgumentException($"message type is not detailed enough", nameof(messageType));
             }
             
-            if (_nameMapper.IsBuiltInType(rosType))
+            if (NameMapper.IsBuiltInType(rosType))
                 return;
 
             var fields = message.Fields
-                .Select(x => new
+                .Select(x => new FieldTemplateData
                 {
                     Index = message.Items
                                 .Select((item, index) => new {Item = item, Index = index})
@@ -328,10 +329,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                                 .Index + 1, // Index of this field in serialized message (starting at 1)
                     RosType = x.TypeInfo,
                     RosIdentifier = x.Identifier,
-                    Type = new
+                    Type = new FieldTypeTemplateData
                     {
-                        InterfaceName = _nameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo),
-                        ConcreteName = _nameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
+                        InterfaceName = NameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo),
+                        ConcreteName = NameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
                         IsBuiltInType = x.TypeInfo.IsBuiltInType,
                         IsArray = x.TypeInfo.IsArray,
                         IsValueType = x.TypeInfo.IsValueType(),
@@ -342,7 +343,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 .ToList();
 
             var constants = message.Constants
-                .Select(c => new
+                .Select(c => new ConstantTemplateData
                 {
                     Index = message.Items
                                 .Select((item, index) => new {item, index})
@@ -350,7 +351,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                                 .index + 1,
                     RosType = c.TypeInfo,
                     RosIdentifier = c.Identifier,
-                    TypeName = _nameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
+                    TypeName = NameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
                     Identifier = c.Identifier,
                     Value = c.Value
                 })
@@ -359,24 +360,13 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             var data = new MessageTemplateData
             {
                 Package = PackageTemplateData,
-                RosTypeName = _nameMapper.GetRosTypeName(rosType.TypeName, messageType),
+                RosTypeName = NameMapper.GetRosTypeName(rosType.TypeName, messageType),
                 RosAbstractTypeName = rosType.TypeName,
-                TypeName = _nameMapper.GetTypeName(rosType.TypeName, messageType),
-                AbstractTypeName = _nameMapper.GetTypeName(rosType.TypeName, DetailedRosMessageType.None),
+                TypeName = NameMapper.GetTypeName(rosType.TypeName, messageType),
+                AbstractTypeName = NameMapper.GetTypeName(rosType.TypeName, DetailedRosMessageType.None),
                 Fields = fields,
                 Constants = constants,
-                MessageType = new
-                {
-                    MessageType = (int) messageType,
-                    IsMessage = messageType.HasFlag(DetailedRosMessageType.Message),
-                    IsAction = messageType.HasFlag(DetailedRosMessageType.Action),
-                    IsActionGoal = messageType.HasFlag(DetailedRosMessageType.ActionGoal),
-                    IsActionResult = messageType.HasFlag(DetailedRosMessageType.ActionResult),
-                    IsActionFeedback = messageType.HasFlag(DetailedRosMessageType.ActionFeedback),
-                    IsService = messageType.HasFlag(DetailedRosMessageType.Service),
-                    IsServiceRequest = messageType.HasFlag(DetailedRosMessageType.ServiceRequest),
-                    IsServiceResponse = messageType.HasFlag(DetailedRosMessageType.ServiceResponse)
-                }
+                MessageType = new MessageTypeTemplateData(messageType)
             };
 
             var typeName = data.TypeName;
@@ -384,23 +374,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             var content = _templateEngine.Format(MessageTemplateFilePath, data);
             
             WriteFile(filePath, content);
-        }
-
-        public class MessageTemplateData
-        {
-            public PackageTemplateData Package { get; set; }
-            
-            public string RosTypeName { get; set; }
-            public string RosAbstractTypeName { get; set; }
-            
-            public string TypeName { get; set; }
-            public string AbstractTypeName { get; set; }
-            
-            public IEnumerable<object> Fields { get; set; }
-            
-            public IEnumerable<object> Constants { get; set; }
-            
-            public object MessageType { get; set; }
         }
         
         private void WriteServiceInternal(RosTypeInfo serviceType)
@@ -454,7 +427,5 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             
             File.WriteAllText(filePath, content);
         }
-
-        
     }
 }
