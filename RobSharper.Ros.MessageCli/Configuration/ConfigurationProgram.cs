@@ -197,7 +197,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     
                     break;
                 default:
-                    Console.WriteLine($"Remove configuration element {options.ConfigurationElement} is not supported");
+                    Console.WriteLine($"Add configuration element {options.ConfigurationElement} is not supported");
                     Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
                     break;
             }

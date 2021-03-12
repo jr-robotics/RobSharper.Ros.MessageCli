@@ -98,7 +98,9 @@ namespace RobSharper.Ros.MessageCli.Configuration
             {
                 return new List<Example>() {
                     new Example("Show message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "show" }),
-                    new Example("Set message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "set", Value = "My.Messages.Namespace"})
+                    new Example("Set message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "set", Value = "My.Messages.Namespace"}),
+                    new Example("Show default output (dll or nupkg)", new ConfigurationOptions { ConfigurationElementString = "defaultOutput",  CommandString = "show" }),
+                    new Example("Set default output (dll or nupkg)", new ConfigurationOptions { ConfigurationElementString = "defaultOutput",  CommandString = "set", Value = "nupkg"}),
                 };
             }
         }
