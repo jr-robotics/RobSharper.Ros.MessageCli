@@ -34,54 +34,39 @@ namespace RobSharper.Ros.MessageCli
                     settings.CaseInsensitiveEnumValues = true;
                 });
 
+                
                 var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args);
+                var hideUsage = false;
 
-                var result = parserResult
-                    .MapResult(
-                        (CodeGenerationOptions options) =>
-                        {
-                            var config = configuration.GetSection("Build");
-                            var configObject = new CodeGenerationConfiguration();
-                            config.Bind(configObject);
+                parserResult
+                    .WithParsed<CodeGenerationOptions>(options =>
+                    {
+                        var config = configuration.GetSection("Build");
+                        var configObject = new CodeGenerationConfiguration();
+                        config.Bind(configObject);
 
-                            options.SetDefaultBuildAction(configObject.DefaultBuildAction);
-                            options.SetDefaultRootNamespace(configObject.RootNamespace);
-                            options.NugetFeedXmlSources = configObject.NugetFeeds?
-                                .Select(f => f.GetXmlString())
-                                .ToList() ?? Enumerable.Empty<string>();
+                        options.SetDefaultBuildAction(configObject.DefaultBuildAction);
+                        options.SetDefaultRootNamespace(configObject.RootNamespace);
+                        options.NugetFeedXmlSources = configObject.NugetFeeds?
+                            .Select(f => f.GetXmlString())
+                            .ToList() ?? Enumerable.Empty<string>();
 
-                            var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                            CodeGeneration.CodeGeneration.Execute(options, templateEngine);
-                            return 0;
-                        },
-                        (FeedConfigurationOptions options) =>
-                        {
-                            ConfigurationProgram.Execute(options);
-                            return 0;
-                        },
-                        (NamespaceConfigurationOptions options) =>
-                        {
-                            ConfigurationProgram.Execute(options);
-                            return 0;
-                        },
-                        (OutputConfigurationOptions options) =>
-                        {
-                            ConfigurationProgram.Execute(options);
-                            return 0;
-                        },
-                        errs =>
-                        {
-                            Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
-                            return 0;
-                        });
+                        var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
+                        CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                    })
+                    .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<OutputConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithNotParsed(errs =>
+                    {
+                        hideUsage = true;
+                        Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
+                    });
 
                 
-                if (result != 0 || Environment.ExitCode != 0)
+                if (!hideUsage && Environment.ExitCode != 0)
                 {
                     PrintUsage(parserResult);
-
-                    if (result != 0)
-                        Environment.ExitCode = result;
                 }
             }
         }
