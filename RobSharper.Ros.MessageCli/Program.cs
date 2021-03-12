@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CommandLine;
+using CommandLine.Text;
 using HandlebarsDotNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +18,8 @@ namespace RobSharper.Ros.MessageCli
 {
     class Program
     {
+        public const string Name = "dotnet-rosmsg";
+        
         static void Main(string[] args)
         {
             var configuration = LoadConfiguration();
@@ -31,36 +33,54 @@ namespace RobSharper.Ros.MessageCli
                     settings.HelpWriter = Console.Error;
                     settings.CaseInsensitiveEnumValues = true;
                 });
+
                 
-                var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions>(args)
-                    .MapResult(
-                        (CodeGenerationOptions options) =>
-                        {
-                            var config = configuration.GetSection("Build");
-                            var configObject = new CodeGenerationConfiguration();
-                            config.Bind(configObject);
-                            
-                            options.SetDefaultBuildAction(configObject.DefaultBuildAction);
-                            options.SetDefaultRootNamespace(configObject.RootNamespace);
-                            options.NugetFeedXmlSources = configObject.NugetFeeds?
-                                .Select(f => f.GetXmlString())
-                                .ToList() ?? Enumerable.Empty<string>();
-                            
-                            var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                            CodeGeneration.CodeGeneration.Execute(options, templateEngine);
-                            return 0;
-                        },
-                        (ConfigurationOptions options) =>
-                        {
-                            ConfigurationProgram.Execute(options);
-                            return 0;
-                        },
-                        errs =>
-                        {
-                            Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
-                            return 0;
-                        });
+                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args);
+                var hideUsage = false;
+
+                parserResult
+                    .WithParsed<CodeGenerationOptions>(options =>
+                    {
+                        var config = configuration.GetSection("Build");
+                        var configObject = new CodeGenerationConfiguration();
+                        config.Bind(configObject);
+
+                        options.SetDefaultBuildAction(configObject.DefaultBuildAction);
+                        options.SetDefaultRootNamespace(configObject.RootNamespace);
+                        options.NugetFeedXmlSources = configObject.NugetFeeds?
+                            .Select(f => f.GetXmlString())
+                            .ToList() ?? Enumerable.Empty<string>();
+
+                        var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
+                        CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                    })
+                    .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<OutputConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithNotParsed(errs =>
+                    {
+                        hideUsage = true;
+                        Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
+                    });
+
+                
+                if (!hideUsage && Environment.ExitCode != 0)
+                {
+                    PrintUsage(parserResult);
+                }
             }
+        }
+
+        private static void PrintUsage(ParserResult<object> parserResult)
+        {
+            var h = HelpText.RenderUsageText(parserResult);
+
+            if (string.IsNullOrEmpty(h))
+                return;
+            
+            Console.WriteLine();
+            Console.WriteLine("USAGE:");
+            Console.WriteLine(h);
         }
 
         private static IContainer CreateContainer(IConfiguration configuration)
