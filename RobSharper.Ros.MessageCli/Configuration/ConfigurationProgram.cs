@@ -29,6 +29,23 @@ namespace RobSharper.Ros.MessageCli.Configuration
             }
         }
 
+        public static void Execute(NamespaceConfigurationOptions options)
+        {
+            var configuration = LoadConfiguration();
+
+            var value = options.Value?.Trim();
+
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine(configuration.RootNamespace ?? "<not set>");
+            }
+            else
+            {
+                configuration.RootNamespace = options.Value;
+                UpdateConfiguration(configuration);
+            }
+        }
+
         private static void ShowConfigValues(ConfigurationOptions options, CodeGenerationConfiguration configuration)
         {
             switch (options.ConfigurationElement)

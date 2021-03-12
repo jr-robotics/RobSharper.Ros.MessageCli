@@ -33,7 +33,7 @@ namespace RobSharper.Ros.MessageCli
                     settings.CaseInsensitiveEnumValues = true;
                 });
 
-                var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions>(args)
+                var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions, NamespaceConfigurationOptions>(args)
                     .MapResult(
                         (CodeGenerationOptions options) =>
                         {
@@ -52,6 +52,11 @@ namespace RobSharper.Ros.MessageCli
                             return 0;
                         },
                         (ConfigurationOptions options) =>
+                        {
+                            ConfigurationProgram.Execute(options);
+                            return 0;
+                        },
+                        (NamespaceConfigurationOptions options) =>
                         {
                             ConfigurationProgram.Execute(options);
                             return 0;
