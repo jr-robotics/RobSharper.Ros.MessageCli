@@ -29,7 +29,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
         [Value(1, MetaName = "Configuration element",
             HelpText = @"Configuration element: namespace | defaultOutput | feeds
   namespace:       The root namespace for generated message packages
-  defaultOutput:   Set the default output format ('nupkg' or 'dll')
+  defaultOutput:   The default output format for generated message packages ('nupkg' or 'dll')
   feeds:           A list of nuget feeds used for loading package dependencies",
             Required = true)]
         public string ConfigurationElementString
@@ -50,7 +50,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
 
         public ConfigurationElements ConfigurationElement { get; set; }
 
-        [Value(2, MetaName = "Command", HelpText = "show (default) | set | add | remove", Required = false)]
+        [Value(2, MetaName = "Command", HelpText = "show | set | add | remove", Required = false, Default = "show")]
         public string CommandString
         {
             get => _commandString;
@@ -101,6 +101,12 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     new Example("Set message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "set", Value = "My.Messages.Namespace"}),
                     new Example("Show default output (dll or nupkg)", new ConfigurationOptions { ConfigurationElementString = "defaultOutput",  CommandString = "show" }),
                     new Example("Set default output (dll or nupkg)", new ConfigurationOptions { ConfigurationElementString = "defaultOutput",  CommandString = "set", Value = "nupkg"}),
+                    new Example("List nuget feeds", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "show"}),
+                    new Example("Add nuget feed", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "add", Name = "My NuGet feed", Source = "https://robotics-baget.joanneum.at/v3/index.json", ProtocolVersion = 3}),
+                    new Example("Add nuget feed", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "add", Name = "My NuGet feed", Source = "https://robotics-baget.joanneum.at/v3/index.json"}),
+                    new Example("Add nuget feed", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "add", Name = "My NuGet feed", Source = "/path/to/nuget/files/"}),
+                    new Example("Add nuget feed", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "add", Name = "My NuGet feed", Source = "/path/to/nuget/files/"}),
+                    new Example("Remove nuget feed", new ConfigurationOptions { ConfigurationElementString = "feeds",  CommandString = "remove", Name = "My NuGet feed"}),
                 };
             }
         }

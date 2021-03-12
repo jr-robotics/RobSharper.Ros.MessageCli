@@ -159,7 +159,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
 
                     if (string.IsNullOrEmpty(feedName))
                     {
-                        Console.WriteLine("No feed name provided (use option -name)");
+                        Console.WriteLine("No feed name provided (use option --name)");
                         Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
                         break;
                     }
@@ -167,7 +167,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     var source = options.Source?.Trim();
                     if (string.IsNullOrEmpty(source))
                     {
-                        Console.WriteLine("No feed source provided (use option -source)");
+                        Console.WriteLine("No feed source provided (use option --source)");
                         Environment.ExitCode |= (int) ExitCodes.InvalidFeedSource;
                         break;
                     }
