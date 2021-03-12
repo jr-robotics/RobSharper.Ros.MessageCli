@@ -30,24 +30,67 @@ dotnet rosmsg build --help
 ## Configuration
 
 ```
-dotnet rosmsg config --help
+dotnet rosmsg --help
 ```
 
 ### Custom NuGet feeds
 ROSMSG supports custom NuGet feeds.
 The official NuGet feed nuget.org is added by default.
 
+Print usage:
+```
+dotnet rosmsg config-feeds --help
+```
+
 List configured NuGet feeds:
 ```
-dotnet rosmsg config feeds
+dotnet rosmsg config-feeds
 ```
 
 Add new feed:
 ```
-dotnet rosmsg config feeds add <NAME> --source <URL|PATH> [--protocol <PROTOCOL_VERSION>]
+dotnet rosmsg config-feeds add <NAME> <SOURCE_URL|SOURCE_PATH> [<PROTOCOL_VERSION>]
 ```
 
 Remove an existing feed:
 ```
-dotnet rosmsg config feeds remove <NAME>
+dotnet rosmsg config-feeds remove <NAME>
+```
+
+### Default namespace
+Defines the default root namespace for generated messages.
+
+Print usage:
+```
+dotnet rosmsg config-namespace --help
+```
+
+Show current value:
+```
+dotnet rosmsg config-namespace
+```
+
+Set new value:
+```
+dotnet rosmsg config-namespace <NAMESPACE>
+```
+
+### Default output format
+Defines the default output format.
+This can either be **nupkg** or **dll**.
+
+Print usage:
+```
+dotnet rosmsg config-output --help
+```
+
+Show current value:
+```
+dotnet rosmsg config-output
+```
+
+Set new value:
+```
+dotnet rosmsg config-output nupkg
+dotnet rosmsg config-output dll
 ```
