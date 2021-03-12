@@ -1,14 +1,13 @@
-using System;
 using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
 
 namespace RobSharper.Ros.MessageCli.Configuration
 {
-    [Verb("config-namespace", HelpText = "View or edit the default root namespace for generated message packages.")]
+    [Verb("config-namespace", HelpText = "View or edit the default root namespace for generated message packages")]
     public class NamespaceConfigurationOptions
     {
-        [Value(3, MetaName = "Value", HelpText = "The namespace to set", Required = false)]
+        [Value(1, MetaName = "Value", HelpText = "The namespace to set", Required = false)]
         public string Value { get; set; }
         
         
