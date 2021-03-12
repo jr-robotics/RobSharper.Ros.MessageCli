@@ -74,8 +74,16 @@ namespace RobSharper.Ros.MessageCli.Configuration
             switch (options.ConfigurationElement)
             {
                 case ConfigurationOptions.ConfigurationElements.Namespace:
-                    configuration.RootNamespace = value;
-                    UpdateConfiguration(configuration);
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        Console.WriteLine($"{options.ConfigurationElement} must not be empty");
+                        Environment.ExitCode |= (int) ExitCodes.InvalidConfiguration;
+                    }
+                    else
+                    {
+                        configuration.RootNamespace = value;
+                        UpdateConfiguration(configuration);
+                    }
                     break;
                 case ConfigurationOptions.ConfigurationElements.DefaultOutput:
                     if (!"nupkg".Equals(value, StringComparison.InvariantCultureIgnoreCase) &&

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -18,6 +17,8 @@ namespace RobSharper.Ros.MessageCli
 {
     class Program
     {
+        public const string Name = "dotnet-rosmsg";
+        
         static void Main(string[] args)
         {
             var configuration = LoadConfiguration();
@@ -31,7 +32,7 @@ namespace RobSharper.Ros.MessageCli
                     settings.HelpWriter = Console.Error;
                     settings.CaseInsensitiveEnumValues = true;
                 });
-                
+
                 var returnCode = commandLineParser.ParseArguments<CodeGenerationOptions, ConfigurationOptions>(args)
                     .MapResult(
                         (CodeGenerationOptions options) =>

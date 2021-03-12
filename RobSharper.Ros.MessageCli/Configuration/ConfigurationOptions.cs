@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using CommandLine;
+using CommandLine.Text;
 
 namespace RobSharper.Ros.MessageCli.Configuration
 {
@@ -39,7 +41,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
 
                 if (!Enum.TryParse(typeof(ConfigurationElements), value, true, out var configElement))
                 {
-                    throw new NotSupportedException($"Configuration element {value} is not supported");
+                    throw new NotSupportedException($"Configuration element '{value}' is not supported");
                 };
 
                 ConfigurationElement = (ConfigurationElements) configElement;
@@ -56,12 +58,19 @@ namespace RobSharper.Ros.MessageCli.Configuration
             {
                 _commandString = value;
 
-                if (!Enum.TryParse(typeof(Commands), value, true, out var configElement))
+                if (string.IsNullOrEmpty(_commandString))
                 {
-                    throw new NotSupportedException($"Configuration element {value} is not supported");
-                };
+                    Command = Commands.Show;
+                }
+                else
+                {
+                    if (!Enum.TryParse(typeof(Commands), value, true, out var configElement))
+                    {
+                        throw new NotSupportedException($"Command '{value}' is not supported");
+                    };
 
-                Command = (Commands) configElement;
+                    Command = (Commands) configElement;
+                }
             }
         }
 
@@ -80,5 +89,18 @@ namespace RobSharper.Ros.MessageCli.Configuration
         
         [Option("protocol", Required = false, HelpText = "Nuget protocol version (e.g. 3)")]
         public int ProtocolVersion { get; set; }
+        
+        
+        [Usage(ApplicationAlias = Program.Name)]
+        public static IEnumerable<Example> Examples
+        {
+            get
+            {
+                return new List<Example>() {
+                    new Example("Show message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "show" }),
+                    new Example("Set message root namespace", new ConfigurationOptions { ConfigurationElementString = "namespace",  CommandString = "set", Value = "My.Messages.Namespace"})
+                };
+            }
+        }
     }
 }
