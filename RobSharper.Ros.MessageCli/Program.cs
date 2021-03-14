@@ -52,7 +52,7 @@ namespace RobSharper.Ros.MessageCli
                             .ToList() ?? Enumerable.Empty<string>();
 
                         var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                        var packageGeneratorFactory = new UmlRoboticsMessagePackageGeneratorFactory();
+                        var packageGeneratorFactory = serviceProvider.ResolveKeyed<IRosPackageGeneratorFactory>(configObject.MessageGenerator);
                         
                         CodeGeneration.CodeGeneration.Execute(options, templateEngine, packageGeneratorFactory);
                     })
@@ -144,6 +144,10 @@ namespace RobSharper.Ros.MessageCli
                 .As<IKeyedTemplateEngine>()
                 .As<IKeyedTemplateFormatter>();
             
+            // Code generators
+            containerBuilder.RegisterInstance(new UmlRoboticsMessagePackageGeneratorFactory())
+                .SingleInstance()
+                .Keyed<IRosPackageGeneratorFactory>("umlrobotics");
             
             var container = containerBuilder.Build();
             

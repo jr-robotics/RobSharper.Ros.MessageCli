@@ -1,6 +1,7 @@
 {
   "Build": {
     "DefaultBuildAction": "nupkg",
+    "MessageGenerator": "umlrobotics",
     "RootNamespace": "Uml.Robotics.Ros.Messages",
     "UseDefaultNugetConfiguration": true,
     "NugetFeeds": [
