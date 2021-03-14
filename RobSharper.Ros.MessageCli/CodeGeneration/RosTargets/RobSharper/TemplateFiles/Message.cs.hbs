@@ -1,0 +1,19 @@
+using RobSharper.Ros.MessageEssentials;
+
+namespace {{Package.Namespace}}
+{
+    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+    public class {{TypeName}}
+    {
+    {{#each Constants}}
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public const {{TypeName}} {{Identifier}} = {{formatValue Value}};
+    
+    {{/each}}
+    {{#each Fields}}
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public {{{Type.InterfaceName}}} {{Identifier}} {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}(){{/unless}};
+    
+    {{/each}}
+    }
+}
