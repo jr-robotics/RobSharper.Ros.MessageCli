@@ -1,7 +1,7 @@
 {
   "Build": {
     "DefaultBuildAction": "nupkg",
-    "CodeGenerator": "umlrobotics",
+    "CodeGenerator": "rosnet",
     "RootNamespace": "Uml.Robotics.Ros.Messages",
     "NugetFeeds": [
       {

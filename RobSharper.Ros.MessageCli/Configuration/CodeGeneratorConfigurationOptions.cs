@@ -11,13 +11,13 @@ namespace RobSharper.Ros.MessageCli.Configuration
         public enum ConfigurationElements
         {
             RobSharper,
-            UmlRobotics
+            RosNet
         }
         
         private string _valueString;
 
         [Value(1, MetaName = "Value",
-            HelpText = "Code generator for package generation: robsharper | umlrobotics",
+            HelpText = "Code generator for package generation: robsharper | rosnet",
             Required = false)]
         public string ValueString
         {
@@ -49,7 +49,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
                 return new List<Example>() {
                     new Example("Show configured code generator", new CodeGeneratorConfigurationOptions()),
                     new Example("Set code generator to RobSharper ", new CodeGeneratorConfigurationOptions { ValueString = "robsharper"}),
-                    new Example("Set code generator to UmlRobotics ", new CodeGeneratorConfigurationOptions { ValueString = "umlrobotics"}),
+                    new Example("Set code generator to Ros.Net ", new CodeGeneratorConfigurationOptions { ValueString = "rosnet"}),
                 };
             }
         }
