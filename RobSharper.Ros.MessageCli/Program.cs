@@ -52,10 +52,10 @@ namespace RobSharper.Ros.MessageCli
                             .Select(f => f.GetXmlString())
                             .ToList() ?? Enumerable.Empty<string>();
 
-                        var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                        var packageGeneratorFactory = serviceProvider.ResolveKeyed<IRosPackageGeneratorFactory>(options.CodeGeneratorString);
+                        var packageGeneratorFactory = serviceProvider
+                            .ResolveKeyed<IRosPackageGeneratorFactory>(options.CodeGeneratorString);
                         
-                        CodeGeneration.CodeGeneration.Execute(options, templateEngine, packageGeneratorFactory);
+                        CodeGeneration.CodeGeneration.Execute(options, packageGeneratorFactory);
                     })
                     .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)
@@ -101,14 +101,14 @@ namespace RobSharper.Ros.MessageCli
             
             containerBuilder.Populate(services);
 
-            // Template Engine
+            // HandlebarsConfiguration
             containerBuilder.Register(context =>
                 {
                     var config = new HandlebarsConfiguration
                     {
                         ThrowOnUnresolvedBindingExpression = true,
                     };
-                    
+
                     config.Helpers.Add("formatValue", (output, hbContext, arguments) =>
                     {
                         object value = arguments[0];
@@ -134,22 +134,29 @@ namespace RobSharper.Ros.MessageCli
 
                         if (value is bool)
                         {
-                            output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value).ToLowerInvariant());
+                            output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value)
+                                .ToLowerInvariant());
                             return;
                         }
-                        
+
                         output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value));
                     });
-                    return new FileBasedHandlebarsTemplateEngine(TemplatePaths.TemplatesDirectory, config);
+
+                    return config;
                 })
-                .SingleInstance()
-                .As<IKeyedTemplateEngine>()
-                .As<IKeyedTemplateFormatter>();
+                .AsSelf();
             
             // Code generators
-            containerBuilder.RegisterInstance(new UmlRoboticsMessagePackageGeneratorFactory())
+            containerBuilder.Register(context =>
+                {
+                    var handlebarsConfig = context.Resolve<HandlebarsConfiguration>();
+                    var templateEngine = new FileBasedHandlebarsTemplateEngine(TemplatePaths.TemplatesDirectory, handlebarsConfig);
+                    var packageGeneratorFactory = new UmlRoboticsMessagePackageGeneratorFactory(templateEngine);
+
+                    return packageGeneratorFactory;
+                })
                 .SingleInstance()
-                .Keyed<IRosPackageGeneratorFactory>("umlrobotics");
+                .Keyed<IRosPackageGeneratorFactory>("rosnet");
             
             var container = containerBuilder.Build();
             

@@ -2,16 +2,14 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public static partial class CodeGeneration
     {
-        public static void Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine, IRosPackageGeneratorFactory packageGeneratorFactory)
+        public static void Execute(CodeGenerationOptions options, IRosPackageGeneratorFactory packageGeneratorFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            if (templateEngine == null) throw new ArgumentNullException(nameof(templateEngine));
             if (packageGeneratorFactory == null) throw new ArgumentNullException(nameof(packageGeneratorFactory));
             
             CodeGenerationContext context;
@@ -67,7 +65,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
-                    var generator = packageGeneratorFactory.CreateMessagePackageGenerator(options, templateEngine, package, packageDirectories);
+                    var generator = packageGeneratorFactory.CreateMessagePackageGenerator(options, package, packageDirectories);
 
                     try
                     {

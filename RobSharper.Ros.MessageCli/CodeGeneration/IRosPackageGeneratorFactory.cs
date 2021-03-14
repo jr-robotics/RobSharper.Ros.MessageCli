@@ -1,11 +1,9 @@
-﻿using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
-
-namespace RobSharper.Ros.MessageCli.CodeGeneration
+﻿namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public interface IRosPackageGeneratorFactory
     {
         IRosPackageGenerator CreateMessagePackageGenerator(CodeGenerationOptions options,
-            IKeyedTemplateFormatter templateEngine, CodeGenerationPackageContext package,
+            CodeGenerationPackageContext package,
             ProjectCodeGenerationDirectoryContext packageDirectories);
     }
 }
