@@ -68,10 +68,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             if (_packageTemplateData != null)
                 return;
 
-            _packageTemplateData = CreatePackageData();
+            _packageTemplateData = GetPackageTemplateData();
         }
 
-        protected virtual PackageTemplateData CreatePackageData()
+        protected abstract NameMapper GetNameMapper();
+
+        protected virtual PackageTemplateData GetPackageTemplateData()
         {
             var data = new PackageTemplateData
             {
@@ -93,7 +95,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             Colorful.Console.WriteLine($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
             Colorful.Console.WriteLine(Package.PackageInfo.PackageDirectory.FullName);
             
+            EnsurePackageData();
+            
             CreateProjectFile();
+            CreateNugetConfigFile();
+            
             AddNugetDependencies();
         
             if (!Package.PackageInfo.IsMetaPackage)
@@ -110,17 +116,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             Colorful.Console.WriteLine();
         }
 
-        protected abstract NameMapper GetNameMapper();
-
         private void CreateProjectFile()
         {
-            EnsurePackageData();
-
             var projectFilePath = _directories.TempDirectory.GetFilePath($"{PackageTemplateData.Namespace}.csproj");
             var projectFileContent = _templateEngine.Format(ProjectTemplateFilePath, PackageTemplateData);
             WriteFile(projectFilePath, projectFileContent);
 
-            
+            _projectFilePath = projectFilePath;
+        }
+
+        private  void CreateNugetConfigFile()
+        {
             var nugetConfig = new
             {
                 TempNugetFolder = _directories.NugetTempDirectory.FullName,
@@ -130,17 +136,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             var nugetConfigFilePath = _directories.TempDirectory.GetFilePath("nuget.config");
             var nugetConfigFile = _templateEngine.Format(NugetConfigTemplateFilePath, nugetConfig);
             WriteFile(nugetConfigFilePath, nugetConfigFile);
-
-            _projectFilePath = projectFilePath;
-        }
-
-        private void BuildProject()
-        {
-            Colorful.Console.WriteLine();
-            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
-            Colorful.Console.WriteLine();
-            
-            DotNetProcess.Build(_projectFilePath);
         }
 
         private void AddNugetDependencies()
@@ -195,6 +190,15 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                         $"Could not add dependency {dependency}.", e);
                 }
             }
+        }
+
+        private void BuildProject()
+        {
+            Colorful.Console.WriteLine();
+            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            Colorful.Console.WriteLine();
+            
+            DotNetProcess.Build(_projectFilePath);
         }
 
         private void CopyOutput()
@@ -266,7 +270,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateMessage(RosTypeInfo rosType, MessageDescriptor message)
+        protected virtual  void CreateMessage(RosTypeInfo rosType, MessageDescriptor message)
         {
             WriteMessageInternal(rosType, DetailedRosMessageType.Message, message);
         }
@@ -279,7 +283,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateService(RosTypeInfo rosType, ServiceDescriptor service)
+        protected virtual  void CreateService(RosTypeInfo rosType, ServiceDescriptor service)
         {
             if (NameMapper.IsBuiltInType(rosType))
                 return;
@@ -299,7 +303,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateAction(RosTypeInfo rosType, ActionDescriptor action)
+        protected virtual void CreateAction(RosTypeInfo rosType, ActionDescriptor action)
         {
             WriteActionInternal(rosType);
             
@@ -320,13 +324,23 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             if (NameMapper.IsBuiltInType(rosType))
                 return;
 
+            var data = GetMessageTemplateData(rosType, messageType, message);
+            var filePath = _directories.TempDirectory.GetFilePath($"{data.TypeName}.cs");
+            var content = _templateEngine.Format(MessageTemplateFilePath, data);
+            
+            WriteFile(filePath, content);
+        }
+
+        protected virtual MessageTemplateData GetMessageTemplateData(RosTypeInfo rosType, DetailedRosMessageType messageType,
+            MessageDescriptor message)
+        {
             var fields = message.Fields
                 .Select(x => new FieldTemplateData
                 {
                     Index = message.Items
-                                .Select((item, index) => new {Item = item, Index = index})
-                                .First(f => f.Item == x)
-                                .Index + 1, // Index of this field in serialized message (starting at 1)
+                        .Select((item, index) => new {Item = item, Index = index})
+                        .First(f => f.Item == x)
+                        .Index + 1, // Index of this field in serialized message (starting at 1)
                     RosType = x.TypeInfo,
                     RosIdentifier = x.Identifier,
                     Type = new FieldTypeTemplateData
@@ -346,9 +360,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 .Select(c => new ConstantTemplateData
                 {
                     Index = message.Items
-                                .Select((item, index) => new {item, index})
-                                .First(x => x.item == c)
-                                .index + 1,
+                        .Select((item, index) => new {item, index})
+                        .First(x => x.item == c)
+                        .index + 1,
                     RosType = c.TypeInfo,
                     RosIdentifier = c.Identifier,
                     TypeName = NameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
@@ -368,14 +382,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 Constants = constants,
                 MessageType = new MessageTypeTemplateData(messageType)
             };
-
-            var typeName = data.TypeName;
-            var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
-            var content = _templateEngine.Format(MessageTemplateFilePath, data);
             
-            WriteFile(filePath, content);
+            return data;
         }
-        
+
         private void WriteServiceInternal(RosTypeInfo serviceType)
         {
             if (!GenerateServiceFile)
