@@ -52,7 +52,9 @@ namespace RobSharper.Ros.MessageCli
                             .ToList() ?? Enumerable.Empty<string>();
 
                         var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                        CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                        var packageGeneratorFactory = new UmlRoboticsMessagePackageGeneratorFactory();
+                        
+                        CodeGeneration.CodeGeneration.Execute(options, templateEngine, packageGeneratorFactory);
                     })
                     .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)

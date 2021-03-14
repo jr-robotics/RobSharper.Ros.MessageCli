@@ -2,17 +2,18 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
-using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
-using Console = Colorful.Console;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public static partial class CodeGeneration
     {
-        public static void Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine)
+        public static void Execute(CodeGenerationOptions options, IKeyedTemplateFormatter templateEngine, IRosPackageGeneratorFactory packageGeneratorFactory)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (templateEngine == null) throw new ArgumentNullException(nameof(templateEngine));
+            if (packageGeneratorFactory == null) throw new ArgumentNullException(nameof(packageGeneratorFactory));
+            
             CodeGenerationContext context;
 
             try
@@ -66,7 +67,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
-                    var generator = new UmlRoboticsMessagePackageGenerator(package, options, packageDirectories, templateEngine);
+                    var generator = packageGeneratorFactory.CreateMessagePackageGenerator(options, templateEngine, package, packageDirectories);
 
                     try
                     {
