@@ -47,12 +47,13 @@ namespace RobSharper.Ros.MessageCli
 
                         options.SetDefaultBuildAction(configObject.DefaultBuildAction);
                         options.SetDefaultRootNamespace(configObject.RootNamespace);
+                        options.SetDefaultCodeGenerator(configObject.CodeGenerator);
                         options.NugetFeedXmlSources = configObject.NugetFeeds?
                             .Select(f => f.GetXmlString())
                             .ToList() ?? Enumerable.Empty<string>();
 
                         var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                        var packageGeneratorFactory = serviceProvider.ResolveKeyed<IRosPackageGeneratorFactory>(configObject.MessageGenerator);
+                        var packageGeneratorFactory = serviceProvider.ResolveKeyed<IRosPackageGeneratorFactory>(options.CodeGeneratorString);
                         
                         CodeGeneration.CodeGeneration.Execute(options, templateEngine, packageGeneratorFactory);
                     })

@@ -6,7 +6,7 @@ namespace RobSharper.Ros.MessageCli
     {
         public string DefaultBuildAction { get; set; }
         public string RootNamespace { get; set; }
-        public string MessageGenerator { get; set; }
+        public string CodeGenerator { get; set; }
         public IList<NugetSourceConfiguration> NugetFeeds { get; set; }
     }
 }
