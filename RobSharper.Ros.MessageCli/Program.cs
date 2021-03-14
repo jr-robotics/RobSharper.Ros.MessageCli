@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RobSharper.Ros.MessageCli.CodeGeneration;
+using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper;
 using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageCli.Configuration;
@@ -150,13 +151,24 @@ namespace RobSharper.Ros.MessageCli
             containerBuilder.Register(context =>
                 {
                     var handlebarsConfig = context.Resolve<HandlebarsConfiguration>();
-                    var templateEngine = new FileBasedHandlebarsTemplateEngine(TemplatePaths.TemplatesDirectory, handlebarsConfig);
+                    var templateEngine = new FileBasedHandlebarsTemplateEngine(UmlRoboticsMessagePackageGenerator.TemplatesDirectory, handlebarsConfig);
                     var packageGeneratorFactory = new UmlRoboticsMessagePackageGeneratorFactory(templateEngine);
 
                     return packageGeneratorFactory;
                 })
                 .SingleInstance()
                 .Keyed<IRosPackageGeneratorFactory>("rosnet");
+
+            containerBuilder.Register(context =>
+                {
+                    var handlebarsConfig = context.Resolve<HandlebarsConfiguration>();
+                    var templateEngine = new FileBasedHandlebarsTemplateEngine(RobSharperMessagePackageGenerator.TemplatesDirectory, handlebarsConfig);
+                    var packageGeneratorFactory = new RobSharperMessagePackageGeneratorFactory(templateEngine);
+
+                    return packageGeneratorFactory;
+                })
+                .SingleInstance()
+                .Keyed<IRosPackageGeneratorFactory>("robsharper");
             
             var container = containerBuilder.Build();
             

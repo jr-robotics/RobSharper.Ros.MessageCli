@@ -44,14 +44,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
 
-        protected abstract string ProjectTemplateFilePath { get; }
-        protected abstract string NugetConfigTemplateFilePath { get; }
-        protected abstract string MessageTemplateFilePath { get; }
-        protected abstract string ServiceTemplateFilePath { get; }
-        protected abstract string ActionTemplateFilePath { get; }
+        protected abstract string ProjectTemplateFile { get; }
+        protected abstract string NugetConfigTemplateFile { get; }
+        protected abstract string MessageTemplateFile { get; }
+        protected abstract string ServiceTemplateFile { get; }
+        protected abstract string ActionTemplateFile { get; }
 
-        protected virtual bool GenerateActionFile => ActionTemplateFilePath != null;
-        protected virtual bool GenerateServiceFile => ServiceTemplateFilePath != null;
+        protected virtual bool GenerateActionFile => ActionTemplateFile != null;
+        protected virtual bool GenerateServiceFile => ServiceTemplateFile != null;
 
         protected RosMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
             ProjectCodeGenerationDirectoryContext directories, IKeyedTemplateFormatter templateEngine)
@@ -71,7 +71,22 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             _packageTemplateData = GetPackageTemplateData();
         }
 
-        protected abstract NameMapper GetNameMapper();
+        protected virtual NameMapper GetNameMapper()
+        {
+            var packageName = Package.PackageInfo.Name;
+            
+            var namespaceTemplate = (Options.RootNamespace + ".{{Name}}").TrimStart('.');
+            var packageNamingConvention = new StaticHandlebarsTemplateFormatter(namespaceTemplate);
+
+            var nameMapper = GetNameMapper(packageName, packageNamingConvention);
+            
+            return nameMapper;
+        }
+
+        protected virtual NameMapper GetNameMapper(string packageName, StaticHandlebarsTemplateFormatter packageNamingConvention)
+        {
+            return new NameMapper(packageName, packageNamingConvention);
+        }
 
         protected virtual PackageTemplateData GetPackageTemplateData()
         {
@@ -119,7 +134,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
         private void CreateProjectFile()
         {
             var projectFilePath = _directories.TempDirectory.GetFilePath($"{PackageTemplateData.Namespace}.csproj");
-            var projectFileContent = _templateEngine.Format(ProjectTemplateFilePath, PackageTemplateData);
+            var projectFileContent = _templateEngine.Format(ProjectTemplateFile, PackageTemplateData);
             WriteFile(projectFilePath, projectFileContent);
 
             _projectFilePath = projectFilePath;
@@ -134,7 +149,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             };
 
             var nugetConfigFilePath = _directories.TempDirectory.GetFilePath("nuget.config");
-            var nugetConfigFile = _templateEngine.Format(NugetConfigTemplateFilePath, nugetConfig);
+            var nugetConfigFile = _templateEngine.Format(NugetConfigTemplateFile, nugetConfig);
             WriteFile(nugetConfigFilePath, nugetConfigFile);
         }
 
@@ -326,7 +341,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
             var data = GetMessageTemplateData(rosType, messageType, message);
             var filePath = _directories.TempDirectory.GetFilePath($"{data.TypeName}.cs");
-            var content = _templateEngine.Format(MessageTemplateFilePath, data);
+            var content = _templateEngine.Format(MessageTemplateFile, data);
             
             WriteFile(filePath, content);
         }
@@ -393,7 +408,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             
             var data = GetServiceTemplateData(serviceType);
             var filePath = _directories.TempDirectory.GetFilePath($"{data.ServiceType.TypeName}.cs");
-            var content = _templateEngine.Format(ServiceTemplateFilePath, data);
+            var content = _templateEngine.Format(ServiceTemplateFile, data);
 
             WriteFile(filePath, content);
         }

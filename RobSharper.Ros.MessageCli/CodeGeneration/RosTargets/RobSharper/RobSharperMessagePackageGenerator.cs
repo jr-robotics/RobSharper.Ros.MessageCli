@@ -3,15 +3,15 @@ using System.Reflection;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 
-namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
+namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper
 {
-    public class UmlRoboticsMessagePackageGenerator : RosMessagePackageGenerator
+    public class RobSharperMessagePackageGenerator : RosMessagePackageGenerator
     {
         public static readonly string TemplatesDirectory =
-            Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "CodeGeneration", "RosTargets", "UmlRobotics",
+            Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "CodeGeneration", "RosTargets", "RobSharper",
                 "TemplateFiles");
         
-        public UmlRoboticsMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
+        public RobSharperMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
             ProjectCodeGenerationDirectoryContext directories, IKeyedTemplateFormatter templateEngine) : base(package,
             options, directories, templateEngine)
         {
@@ -20,13 +20,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
         protected override string ProjectTemplateFile => "csproj.hbs";
         protected override string NugetConfigTemplateFile => "nuget.config.hbs";
         protected override string MessageTemplateFile => "Message.cs.hbs";
-        protected override string ServiceTemplateFile => "Service.cs.hbs";
+        protected override string ServiceTemplateFile => null;
         protected override string ActionTemplateFile => null;
-
-        protected override NameMapper GetNameMapper(string packageName, StaticHandlebarsTemplateFormatter packageNamingConvention)
-        {
-            var nameMapper = new UmlRoboticsNameMapper(packageName, packageNamingConvention);
-            return nameMapper;
-        }
     }
 }

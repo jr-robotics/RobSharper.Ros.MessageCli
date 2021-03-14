@@ -43,12 +43,12 @@
 
     <!-- Copy templates -->
     <ItemGroup>
+        <Content Include="CodeGeneration\RosTargets\RobSharper\TemplateFiles\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="CodeGeneration\RosTargets\UmlRobotics\TemplateFiles\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-    </ItemGroup>
-    <ItemGroup>
-      <Folder Include="CodeGeneration\RosTargets\RobSharper" />
     </ItemGroup>
 
 </Project>
