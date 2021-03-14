@@ -35,7 +35,7 @@ namespace RobSharper.Ros.MessageCli
                 });
 
                 
-                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args);
+                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions, CodeGeneratorConfigurationOptions>(args);
                 var hideUsage = false;
 
                 parserResult
@@ -60,6 +60,7 @@ namespace RobSharper.Ros.MessageCli
                     .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<OutputConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<CodeGeneratorConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithNotParsed(errs =>
                     {
                         hideUsage = true;

@@ -32,9 +32,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         public enum CodeGenerators
         {
-            Nupkg,
-            Dll
+            RobSharper,
+            UmlRobotics
         }
+        
         private string _codeGeneratorString;
 
         [Option(longName: "CodeGenerator", Required = false, HelpText = "Used Code generator: robsharper | umlrobotics", Hidden = true)]
