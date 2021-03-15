@@ -360,15 +360,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                         .Index + 1, // Index of this field in serialized message (starting at 1)
                     RosType = x.TypeInfo,
                     RosIdentifier = x.Identifier,
-                    Type = new FieldTypeTemplateData
-                    {
-                        InterfaceName = NameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo),
-                        ConcreteName = NameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
-                        IsBuiltInType = x.TypeInfo.IsBuiltInType,
-                        IsArray = x.TypeInfo.IsArray,
-                        IsValueType = x.TypeInfo.IsValueType(),
-                        SupportsEqualityComparer = x.TypeInfo.SupportsEqualityComparer()
-                    },
+                    Type = new FieldTypeTemplateData(NameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo), 
+                        NameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
+                        x.TypeInfo)
+                    ,
                     Identifier = NameMapper.GetFieldName(x.Identifier)
                 })
                 .ToList();

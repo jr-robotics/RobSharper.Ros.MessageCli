@@ -12,13 +12,13 @@ namespace {{Package.Namespace}}
     [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Response)]
 {{/if}}
 {{#if MessageType.IsActionGoal}}
-    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Goal)]
 {{/if}}
 {{#if MessageType.IsActionResult}}
-    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Result)]
 {{/if}}
 {{#if MessageType.IsActionFeedback}}
-    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Feedback)]
 {{/if}}
     public class {{TypeName}}
     {
@@ -28,8 +28,27 @@ namespace {{Package.Namespace}}
     
     {{/each}}
     {{#each Fields}}
+        {{#if Type.IsString}}
+        private string _{{Identifier}} = string.Empty;
+        
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public string {{Identifier}}
+        {
+            get { return _{{Identifier}}; }
+            set {
+                if (value == null)
+                    throw new System.ArgumentNullException(nameof(value), "Value must not be null");
+                
+                _{{Identifier}} = value;
+            }
+        }
+        {{else if Type.IsDateTimeOrTimeSpan}}
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; } = RosTime.Zero;
+        {{else}}
         [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
         public {{{Type.InterfaceName}}} {{Identifier}} { get; set; } {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
+        {{/if}}
     
     {{/each}}
     }

@@ -39,5 +39,26 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 return false;
             }
         }
+
+        public static bool IsType(this RosTypeInfo rosType, Type expectedType)
+        {
+            if (rosType.IsArray || !rosType.IsBuiltInType)
+                return false;
+
+            try
+            {
+                var typeMapper = BuiltInTypeMapping.Create(rosType);
+                return typeMapper.Type == expectedType;
+            }
+            catch (NotSupportedException)
+            {
+                return false;
+            }
+        }
+
+        public static bool IsType<TExpected>(this RosTypeInfo rosType)
+        {
+            return IsType(rosType, typeof(TExpected));
+        }
     }
 }
