@@ -38,7 +38,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         private string _codeGeneratorString;
 
-        [Option(longName: "CodeGenerator", Required = false, HelpText = "Used Code generator: robsharper | rosnet", Hidden = true)]
+        [Option(longName: "codegenerator", Required = false, HelpText = "Used Code generator: robsharper | rosnet", Hidden = true)]
         public string CodeGeneratorString
         {
             get => _codeGeneratorString;
