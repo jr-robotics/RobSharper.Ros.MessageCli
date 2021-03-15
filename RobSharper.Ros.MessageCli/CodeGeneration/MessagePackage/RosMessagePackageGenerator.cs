@@ -83,7 +83,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             return nameMapper;
         }
 
-        protected virtual NameMapper GetNameMapper(string packageName, StaticHandlebarsTemplateFormatter packageNamingConvention)
+        protected virtual NameMapper GetNameMapper(string packageName, ITemplateFormatter packageNamingConvention)
         {
             return new NameMapper(packageName, packageNamingConvention);
         }
@@ -367,7 +367,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                         IsValueType = x.TypeInfo.IsValueType(),
                         SupportsEqualityComparer = x.TypeInfo.SupportsEqualityComparer()
                     },
-                    Identifier = x.Identifier
+                    Identifier = NameMapper.GetFieldName(x.Identifier)
                 })
                 .ToList();
 
@@ -381,11 +381,34 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                     RosType = c.TypeInfo,
                     RosIdentifier = c.Identifier,
                     TypeName = NameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
-                    Identifier = c.Identifier,
+                    Identifier = NameMapper.GetConstantName(c.Identifier),
                     Value = c.Value
                 })
                 .ToList();
 
+            
+            // Sanitize possible identifier duplicates resulting from name identifier mapping
+            // Fall back to ROS identifier name in this case.
+            var duplicateIdentifiers = fields.Select(f => f.Identifier)
+                .Union(constants.Select(c => c.Identifier))
+                .GroupBy(identifier => identifier)
+                .Select(x => new {x.Key, Count = x.Count()})
+                .Where(x => x.Count > 1)
+                .Select(x => x.Key)
+                .ToList();
+
+            foreach (var field in fields.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                field.Identifier = field.RosIdentifier;
+            }
+            
+            foreach (var constant in constants.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                constant.Identifier = constant.RosIdentifier;
+            }
+            
+            
+            
             var data = new MessageTemplateData
             {
                 Package = PackageTemplateData,

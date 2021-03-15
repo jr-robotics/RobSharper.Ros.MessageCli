@@ -23,7 +23,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
         protected override string ServiceTemplateFile => "Service.cs.hbs";
         protected override string ActionTemplateFile => null;
 
-        protected override NameMapper GetNameMapper(string packageName, StaticHandlebarsTemplateFormatter packageNamingConvention)
+        protected override NameMapper GetNameMapper(string packageName, ITemplateFormatter packageNamingConvention)
         {
             var nameMapper = new UmlRoboticsNameMapper(packageName, packageNamingConvention);
             return nameMapper;

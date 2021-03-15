@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using RobSharper.Ros.MessageCli.CodeGeneration.Formatters;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 
@@ -15,6 +16,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper
             ProjectCodeGenerationDirectoryContext directories, IKeyedTemplateFormatter templateEngine) : base(package,
             options, directories, templateEngine)
         {
+        }
+
+        protected override NameMapper GetNameMapper(string packageName, ITemplateFormatter packageNamingConvention)
+        {
+            return new NameMapper(packageName, packageNamingConvention, new PascalCaseFormatter(), null);
         }
 
         protected override string ProjectTemplateFile => "csproj.hbs";
