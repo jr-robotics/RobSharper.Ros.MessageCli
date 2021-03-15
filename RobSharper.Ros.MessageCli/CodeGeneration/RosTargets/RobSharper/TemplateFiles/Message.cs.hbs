@@ -2,7 +2,15 @@ using RobSharper.Ros.MessageEssentials;
 
 namespace {{Package.Namespace}}
 {
+{{#if MessageType.IsMessage}}
     [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+{{/if}}
+{{#if MessageType.IsServiceRequest}}
+    [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Request)]
+{{/if}}
+{{#if MessageType.IsServiceResponse}}
+    [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Response)]
+{{/if}}
     public class {{TypeName}}
     {
     {{#each Constants}}
