@@ -340,6 +340,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 return;
 
             var data = GetMessageTemplateData(rosType, messageType, message);
+            SanitizeMessageTemplateData(data);
+            
             var filePath = _directories.TempDirectory.GetFilePath($"{data.TypeName}.cs");
             var content = _templateEngine.Format(MessageTemplateFile, data);
             
@@ -385,29 +387,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                     Value = c.Value
                 })
                 .ToList();
-
-            
-            // Sanitize possible identifier duplicates resulting from name identifier mapping
-            // Fall back to ROS identifier name in this case.
-            var duplicateIdentifiers = fields.Select(f => f.Identifier)
-                .Union(constants.Select(c => c.Identifier))
-                .GroupBy(identifier => identifier)
-                .Select(x => new {x.Key, Count = x.Count()})
-                .Where(x => x.Count > 1)
-                .Select(x => x.Key)
-                .ToList();
-
-            foreach (var field in fields.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
-            {
-                field.Identifier = field.RosIdentifier;
-            }
-            
-            foreach (var constant in constants.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
-            {
-                constant.Identifier = constant.RosIdentifier;
-            }
-            
-            
             
             var data = new MessageTemplateData
             {
@@ -420,9 +399,72 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 Constants = constants,
                 MessageType = new MessageTypeTemplateData(messageType)
             };
-            
+
             return data;
         }
+
+        protected virtual void SanitizeMessageTemplateData(MessageTemplateData data)
+        {
+            // Sanitize possible identifier duplicates resulting from name identifier mapping
+            // Fall back to ROS identifier name in this case.
+            var duplicateIdentifiers = data.Fields.Select(f => f.Identifier)
+                .Union(data.Constants.Select(c => c.Identifier))
+                .GroupBy(identifier => identifier)
+                .Select(x => new {x.Key, Count = x.Count()})
+                .Where(x => x.Count > 1)
+                .Select(x => x.Key)
+                .ToList();
+
+            foreach (var field in data.Fields.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                field.Identifier = field.RosIdentifier;
+            }
+
+            foreach (var constant in data.Constants.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                constant.Identifier = constant.RosIdentifier;
+            }
+
+
+            // Sanitize possible CS0542: Members cannot be the same as their enclosing type.
+            // Rename those field to PreferredIdentifierIfEqualsTypeName. If the name is already used fall back to
+            // the original ROS identifier. 
+            var cs0542Field = data.Fields
+                .FirstOrDefault(x => x.Identifier == data.TypeName);
+
+            if (cs0542Field != null)
+            {
+                var alternativeIdentifier = PreferredIdentifierIfEqualsTypeName;
+                alternativeIdentifier = NameMapper.GetFieldName(alternativeIdentifier);
+
+                if (data.Fields.Any(x => x.Identifier == alternativeIdentifier))
+                    alternativeIdentifier = cs0542Field.RosIdentifier;
+
+                cs0542Field.Identifier = alternativeIdentifier;
+            }
+
+            var cs0542Const = data.Constants
+                .FirstOrDefault(x => x.Identifier == data.TypeName);
+
+            if (cs0542Const != null)
+            {
+                var alternativeIdentifier = PreferredIdentifierIfEqualsTypeName;
+                alternativeIdentifier = NameMapper.GetConstantName(alternativeIdentifier);
+
+                if (data.Constants.Any(x => x.Identifier == alternativeIdentifier))
+                    alternativeIdentifier = cs0542Const.RosIdentifier;
+
+                cs0542Const.Identifier = alternativeIdentifier;
+            }
+        }
+
+        /// <summary>
+        /// Get the preferred identifier name of a field or constant is named the same as the enclosing type.
+        /// This in not allowed in .Net and would cause a CS0542 compilation error
+        /// (CS0542: Members cannot be the same as their enclosing type).
+        /// </summary>
+        /// <returns>"value", since it seems to be the value of the type.</returns>
+        protected virtual string PreferredIdentifierIfEqualsTypeName => "value";
 
         private void WriteServiceInternal(RosTypeInfo serviceType)
         {

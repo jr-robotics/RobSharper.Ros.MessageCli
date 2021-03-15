@@ -11,6 +11,15 @@ namespace {{Package.Namespace}}
 {{#if MessageType.IsServiceResponse}}
     [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Response)]
 {{/if}}
+{{#if MessageType.IsActionGoal}}
+    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+{{/if}}
+{{#if MessageType.IsActionResult}}
+    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+{{/if}}
+{{#if MessageType.IsActionFeedback}}
+    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+{{/if}}
     public class {{TypeName}}
     {
     {{#each Constants}}
