@@ -33,11 +33,22 @@ namespace {{Package.Namespace}}
         public {{{Type.InterfaceName}}} {{Identifier}} { get; set; }
         {{~#if Type.IsString}} = string.Empty;
         {{~else if Type.IsDateTime}} = RosTime.Zero;
-        {{~else if Type.IsTimeSpan}} = RosTime.Zero; /* TODO: migrate to RosDuration */
+        {{~else if Type.IsTimeSpan}} = RosDuration.Zero;
+        {{~else if Type.IsArray}} = new {{{Type.ConcreteName}}}();
         {{~else}}
             {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
         {{~/if}}
 
     {{/each}}
+
+        public {{TypeName}}()
+        {
+    {{~#each Fields}}
+        {{~#if Type.IsFixedSizeArray}}
+            {{Identifier}}.PopulateWithInitializedRosValues({{Type.ArraySize}});
+        {{/if}}
+    
+    {{/each}}
+        }
     }
 }
