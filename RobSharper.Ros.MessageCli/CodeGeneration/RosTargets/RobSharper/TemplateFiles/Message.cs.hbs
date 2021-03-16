@@ -28,28 +28,16 @@ namespace {{Package.Namespace}}
     
     {{/each}}
     {{#each Fields}}
-        {{#if Type.IsString}}
-        private string _{{Identifier}} = string.Empty;
-        
+
         [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
-        public string {{Identifier}}
-        {
-            get { return _{{Identifier}}; }
-            set {
-                if (value == null)
-                    throw new System.ArgumentNullException(nameof(value), "Value must not be null");
-                
-                _{{Identifier}} = value;
-            }
-        }
-        {{else if Type.IsDateTimeOrTimeSpan}}
-        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
-        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; } = RosTime.Zero;
-        {{else}}
-        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
-        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; } {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
-        {{/if}}
-    
+        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; }
+        {{~#if Type.IsString}} = string.Empty;
+        {{~else if Type.IsDateTime}} = RosTime.Zero;
+        {{~else if Type.IsTimeSpan}} = RosTime.Zero; /* TODO: migrate to RosDuration */
+        {{~else}}
+            {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
+        {{~/if}}
+
     {{/each}}
     }
 }
