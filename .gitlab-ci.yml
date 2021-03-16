@@ -61,19 +61,69 @@ nuget-pack:
     - 'dotnet tool install --add-source ./nuget -g RobSharper.Ros.MessageCli --version $X_CI_VERSION'
     - 'dotnet rosmsg config-feeds add "Robotics BaGet" https://robotics-baget.joanneum.at/v3/index.json 3'
     - 'dotnet rosmsg config-feeds'
-    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget-testresults --nupkg'
-#  artifacts:
-#    paths:
-#      - ros-nuget-testresults
-#    expire_in: 1 week
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-nuget-packages --nupkg --namespace $X_NAMESPACE --codegenerator $X_CODEGENERATOR'
+  artifacts:
+    paths:
+      - ros-nuget-packages
+    expire_in: 1 week
 
-test netcoreapp2_1:
+test ROS.Net netcoreapp2.1:
   extends: .generate_msgs
-  image: mcr.microsoft.com/dotnet/core/sdk:2.1
+  image: mcr.microsoft.com/dotnet/sdk:2.1
+  variables: 
+    X_NAMESPACE: 'Uml.Robotics.Ros.Messages.Netcoreapp21'
+    X_CODEGENERATOR: 'rosnet'
 
-test netcoreapp3_1:
+test ROS.Net netcoreapp3.1:
   extends: .generate_msgs
-  image: mcr.microsoft.com/dotnet/core/sdk:3.1
+  image: mcr.microsoft.com/dotnet/sdk:3.1
+  variables:
+    X_NAMESPACE: 'Uml.Robotics.Ros.Messages.Netcoreapp31'
+    X_CODEGENERATOR: 'rosnet'
+
+test ROS.Net net5.0:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:5.0
+  variables:
+    X_NAMESPACE: 'Uml.Robotics.Ros.Messages.Net5'
+    X_CODEGENERATOR: 'rosnet'
+
+test ROS.Net net6.0:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  variables:
+    X_NAMESPACE: 'Uml.Robotics.Ros.Messages.Net6'
+    X_CODEGENERATOR: 'rosnet'
+
+
+test RobSharper netcoreapp2.1:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:2.1
+  variables:
+    X_NAMESPACE: 'RobSharper.Ros.Messages.Netcoreapp21'
+    X_CODEGENERATOR: 'robsharper'
+
+test RobSharper netcoreapp3.1:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:3.1
+  variables:
+    X_NAMESPACE: 'RobSharper.Ros.Messages.Netcoreapp31'
+    X_CODEGENERATOR: 'robsharper'
+
+test RobSharper net5.0:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:5.0
+  variables:
+    X_NAMESPACE: 'RobSharper.Ros.Messages.Net5'
+    X_CODEGENERATOR: 'robsharper'
+
+test RobSharper net6.0:
+  extends: .generate_msgs
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  variables:
+    X_NAMESPACE: 'RobSharper.Ros.Messages.Net6'
+    X_CODEGENERATOR: 'robsharper'
+
 
 # Deploy to JR BaGet server
 # This is done for all pushes of version tags (v*) automatically
