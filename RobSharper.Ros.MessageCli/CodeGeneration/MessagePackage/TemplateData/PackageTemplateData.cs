@@ -38,5 +38,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData
         public Func<IEnumerable<string>, string> AuthorsToStringFunc { get; set; } = authors => string.Join(";", authors ?? Enumerable.Empty<string>());
 
         public string AuthorsString => AuthorsToStringFunc(Authors);
+        
+        public MessageCliToolInfo MessageCliToolInfo => MessageCliToolInfo.Instance;
     }
 }
