@@ -51,8 +51,6 @@ nuget-pack:
   stage: integration-test
   tags:
     - docker-executor
-  needs:
-    - nuget-pack
   script:
     - 'export X_CI_VERSION=$(git describe | cut -c 2-)'
     - 'export PATH="$PATH:/root/.dotnet/tools"'
