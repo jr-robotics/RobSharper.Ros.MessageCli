@@ -18,11 +18,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper
         {
         }
 
-        protected override NameMapper GetNameMapper(string packageName, ITemplateFormatter packageNamingConvention)
-        {
-            return new NameMapper(packageName, packageNamingConvention, new PascalCaseFormatter(), null);
-        }
-
         protected override string ProjectTemplateFile => "csproj.hbs";
         protected override string NugetConfigTemplateFile => "nuget.config.hbs";
         protected override string MessageTemplateFile => "Message.cs.hbs";
