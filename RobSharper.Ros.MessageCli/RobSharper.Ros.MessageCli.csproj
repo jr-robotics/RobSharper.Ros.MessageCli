@@ -12,7 +12,16 @@
 
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>dotnet-rosmsg</ToolCommandName>
-        <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+        
+        <TargetFrameworks>
+            netcoreapp2.1;netcoreapp3.1
+        </TargetFrameworks>
+        <TargetFrameworks Condition="'$(FrameworkLatest)' == 'True'">
+            netcoreapp2.1;netcoreapp3.1;net5.0
+        </TargetFrameworks>
+        <TargetFrameworks Condition="'$(FrameworkPreview)' == 'True'">
+            netcoreapp2.1;netcoreapp3.1;net5.0;net6.0
+        </TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
