@@ -6,19 +6,22 @@ stages:
   - integration-test
   - deploy
 
+
 test cli:
   stage: test
+  before_script:
+    - 'dotnet tool install dotnet-reportgenerator-globaltool --tool-path dotnet-tools'
   script:
     - 'cd RobSharper.Ros.MessageCli.Tests'
-    - "dotnet test --logger \"junit\" /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=\"$PWD/coverage/\" /p:Exclude=\"[xunit*]*%2C[RobSharper.Ros.MessageCli.Tests]*\" /p:ExcludeByAttribute=\"GeneratedCodeAttribute%2CObsolete%2CCompilerGeneratedAttribute\""
-    - 'dotnet $(find ~/.nuget/packages/reportgenerator -name ReportGenerator.dll | grep netcoreapp2.1) -reports:coverage/coverage.opencover.xml -targetdir:coverage/report -verbosity:Warning -reporttypes:Html'
+    - 'dotnet test --logger junit /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=TestResults/'
+    - '../dotnet-tools/reportgenerator -reports:TestResults/coverage.cobertura.xml -targetdir:TestResults/coverage-report -reporttypes:Html'
   coverage: '/Total\s+\|\s+(\d{0,2}\.\d{1,2}%)/'
   artifacts:
     paths:
-      - 'RobSharper.Ros.MessageCli.Tests/coverage'
-      - 'RobSharper.Ros.MessageCli.Tests/TestResults/TestResults.xml'
+      - 'RobSharper.Ros.MessageCli.Tests/TestResults/'
     reports:
       junit: 'RobSharper.Ros.MessageCli.Tests/TestResults/TestResults.xml'
+      cobertura: 'RobSharper.Ros.MessageCli.Tests/TestResults/coverage.cobertura.xml'
   tags:
     - docker-executor
 
