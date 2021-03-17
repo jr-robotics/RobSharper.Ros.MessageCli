@@ -30,26 +30,50 @@ namespace {{Package.Namespace}}
     {{/each}}
     {{#each Fields}}
 
+        {{#if Type.ShouldBeInitialized}}
+        private {{{Type.InterfaceName}}}? _{{Identifier}};
+
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public {{{Type.InterfaceName}}} {{Identifier}}
+        {
+            get
+            {
+                if (_{{Identifier}} == null)
+                {
+                    _{{Identifier}}
+
+                    {{~#if Type.IsString}} = string.Empty;
+                    {{~else if Type.IsDateTime}} = RosTime.Zero;
+                    {{~else if Type.IsTimeSpan}} = RosDuration.Zero;
+                    {{~else if Type.IsArray}} = new {{{Type.ConcreteName}}}();
+                    {{~else if Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();
+                    {{~else}} = new {{{Type.ConcreteName}}}();
+                    {{~/if}}
+
+                {{#if Type.IsFixedSizeArray}}
+                    _{{Identifier}}.PopulateWithInitializedRosValues({{Type.ArraySize}});
+                {{/if}}
+                }
+
+            {{#if Type.IsValueType}}
+                return _{{Identifier}}.Value;
+            {{else}}
+                return _{{Identifier}};
+            {{/if}}
+            }
+            set
+            {
+                if (value == null)
+                    throw new System.ArgumentNullException(nameof(value), "ROS messages do not support null values");
+        
+                _{{Identifier}} = value;
+            }
+        }
+        {{else}}
         [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
         public {{{Type.InterfaceName}}} {{Identifier}} { get; set; }
-        {{~#if Type.IsString}} = string.Empty;
-        {{~else if Type.IsDateTime}} = RosTime.Zero;
-        {{~else if Type.IsTimeSpan}} = RosDuration.Zero;
-        {{~else if Type.IsArray}} = new {{{Type.ConcreteName}}}();
-        {{~else}}
-            {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();{{/unless}}
-        {{~/if}}
-
-    {{/each}}
-
-        public {{TypeName}}()
-        {
-    {{~#each Fields}}
-        {{~#if Type.IsFixedSizeArray}}
-            {{Identifier}}.PopulateWithInitializedRosValues({{Type.ArraySize}});
         {{/if}}
-    
+
     {{/each}}
-        }
     }
 }

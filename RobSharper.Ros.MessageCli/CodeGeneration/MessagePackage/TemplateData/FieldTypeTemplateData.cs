@@ -19,12 +19,16 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData
         
 
         public bool IsValueType => TypeInfo.IsValueType();
+        public bool IsReferenceType => !TypeInfo.IsValueType();
+        
         public bool SupportsEqualityComparer => TypeInfo.SupportsEqualityComparer();
         public bool IsString => TypeInfo.IsType<string>();
         
         public bool IsDateTime => TypeInfo.IsType<DateTime>();
         public bool IsTimeSpan => TypeInfo.IsType<TimeSpan>();
         public bool IsDateTimeOrTimeSpan => IsDateTime || IsTimeSpan;
+
+        public bool ShouldBeInitialized => IsReferenceType || IsString || IsDateTimeOrTimeSpan;
 
         public FieldTypeTemplateData(string interfaceName, string concreteName, RosTypeInfo typeInfo)
         {
