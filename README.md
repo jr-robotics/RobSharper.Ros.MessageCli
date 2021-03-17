@@ -57,24 +57,6 @@ Remove an existing feed:
 dotnet rosmsg config-feeds remove <NAME>
 ```
 
-### Default namespace
-Defines the default root namespace for generated messages.
-
-Print usage:
-```
-dotnet rosmsg config-namespace --help
-```
-
-Show current value:
-```
-dotnet rosmsg config-namespace
-```
-
-Set new value:
-```
-dotnet rosmsg config-namespace <NAMESPACE>
-```
-
 ### Default output format
 Defines the default output format.
 This can either be **nupkg** or **dll**.
@@ -93,4 +75,48 @@ Set new value:
 ```
 dotnet rosmsg config-output nupkg
 dotnet rosmsg config-output dll
+```
+
+### Default namespace
+Defines the default root namespace for generated messages.
+
+Print usage:
+```
+dotnet rosmsg config-namespace --help
+```
+
+Show current value:
+```
+dotnet rosmsg config-namespace
+```
+
+Set new value:
+```
+dotnet rosmsg config-namespace <NAMESPACE>
+```
+
+### Default code generator
+dotnet ROSMSG supports code generators for different .net ROS implementations.
+
+Supported generators are:
+
+| Config option | ROS implementation | Notes |
+| ------------- | ------------------ | ----- |
+| robsharper    | RobSharper.ROS     | [RobSharper.Ros](https://github.com/jr-robotics?q=RobSharper.Ros) is a set of packages and tools from [JOANNEUM RESEARCH ROBOTICS](https://www.joanneum.at/robotics/en/). |
+| rosnet        | ROS.Net            | This generator uses the [Xamla fork](https://github.com/Xamla/ROS.NET) of ROS.Net, which is available as [NuGet package](https://www.nuget.org/packages/Uml.Robotics.Ros/). |
+
+
+Print usage:
+```
+dotnet rosmsg config-codegenerator --help
+```
+
+Show current value:
+```
+dotnet rosmsg config-codegenerator
+```
+
+Set new value:
+```
+dotnet rosmsg config-codegenerator <robsharper|rosnet>
 ```

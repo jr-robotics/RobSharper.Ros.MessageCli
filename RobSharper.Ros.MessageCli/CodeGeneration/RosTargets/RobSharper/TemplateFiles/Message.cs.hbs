@@ -1,0 +1,79 @@
+using RobSharper.Ros.MessageEssentials;
+
+namespace {{Package.Namespace}}
+{
+{{#if MessageType.IsMessage}}
+    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+{{/if}}
+{{#if MessageType.IsServiceRequest}}
+    [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Request)]
+{{/if}}
+{{#if MessageType.IsServiceResponse}}
+    [RosServiceMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Response)]
+{{/if}}
+{{#if MessageType.IsActionGoal}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Goal)]
+{{/if}}
+{{#if MessageType.IsActionResult}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Result)]
+{{/if}}
+{{#if MessageType.IsActionFeedback}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Feedback)]
+{{/if}}
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
+    public class {{TypeName}}
+    {
+    {{#each Constants}}
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public const {{TypeName}} {{Identifier}} = {{formatValue Value}};
+    
+    {{/each}}
+    {{#each Fields}}
+
+        {{#if Type.ShouldBeInitialized}}
+        private {{{Type.InterfaceName}}}? _{{Identifier}};
+
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public {{{Type.InterfaceName}}} {{Identifier}}
+        {
+            get
+            {
+                if (_{{Identifier}} == null)
+                {
+                    _{{Identifier}}
+
+                    {{~#if Type.IsString}} = string.Empty;
+                    {{~else if Type.IsDateTime}} = RosTime.Zero;
+                    {{~else if Type.IsTimeSpan}} = RosDuration.Zero;
+                    {{~else if Type.IsArray}} = new {{{Type.ConcreteName}}}();
+                    {{~else if Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}();
+                    {{~else}} = new {{{Type.ConcreteName}}}();
+                    {{~/if}}
+
+                {{#if Type.IsFixedSizeArray}}
+                    _{{Identifier}}.PopulateWithInitializedRosValues({{Type.ArraySize}});
+                {{/if}}
+                }
+
+            {{#if Type.IsValueType}}
+                return _{{Identifier}}.Value;
+            {{else}}
+                return _{{Identifier}};
+            {{/if}}
+            }
+            set
+            {
+                if (value == null)
+                    throw new System.ArgumentNullException(nameof(value), "ROS messages do not support null values");
+        
+                _{{Identifier}} = value;
+            }
+        }
+        {{else}}
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
+        public {{{Type.InterfaceName}}} {{Identifier}} { get; set; }
+        {{/if}}
+
+    {{/each}}
+    }
+}

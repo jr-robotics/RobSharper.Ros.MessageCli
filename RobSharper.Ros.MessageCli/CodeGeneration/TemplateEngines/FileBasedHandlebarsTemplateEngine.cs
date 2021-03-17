@@ -5,7 +5,7 @@ using HandlebarsDotNet;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines
 {
-    public class FileBasedHandlebarsTemplateEngine : IKeyedTemplateEngine
+    public class FileBasedHandlebarsTemplateEngine : IKeyedTemplateFormatter
     {
         private readonly Dictionary<string, Func<object, string>> _templates = new Dictionary<string, Func<object, string>>();
 
@@ -67,13 +67,13 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines
             return _templates[fileName](data);
         }
 
-        public void RegisterTemplateSource(string key, string templateSource)
+        private void RegisterTemplateSource(string key, string templateSource)
         {
             var template = Handlebars.Compile(templateSource);
             _templates.Add(key, template);
         }
-        
-        public void RegisterTemplateFile(string filePath)
+
+        private void RegisterTemplateFile(string filePath)
         {
             if (filePath == null) throw new ArgumentNullException(nameof(filePath));
             

@@ -1,8 +1,8 @@
 {
   "Build": {
     "DefaultBuildAction": "nupkg",
+    "CodeGenerator": "rosnet",
     "RootNamespace": "Uml.Robotics.Ros.Messages",
-    "UseDefaultNugetConfiguration": true,
     "NugetFeeds": [
       {
         "Name": "nuget.org",

@@ -42,6 +42,23 @@ namespace RobSharper.Ros.MessageCli.Configuration
                 UpdateConfiguration(configuration);
             }
         }
+
+        public static void Execute(CodeGeneratorConfigurationOptions options)
+        {
+            var configuration = LoadConfiguration();
+
+            if (!options.Value.HasValue)
+            {
+                Console.WriteLine(configuration.CodeGenerator ?? "<not set>");
+            }
+            else
+            {
+                var value = options.Value.ToString().ToLowerInvariant();
+                
+                configuration.CodeGenerator = value;
+                UpdateConfiguration(configuration);
+            }
+        }
         
         public static void Execute(FeedConfigurationOptions options)
         {
@@ -73,8 +90,6 @@ namespace RobSharper.Ros.MessageCli.Configuration
                     .NugetFeeds
                     .Select(f => f.Name.Length)
                     .Max();
-
-                const string NameHeader = "Name                    ";
                         
                 Console.WriteLine($"{"Name",-24} Source");
                 foreach (var feed in configuration.NugetFeeds)

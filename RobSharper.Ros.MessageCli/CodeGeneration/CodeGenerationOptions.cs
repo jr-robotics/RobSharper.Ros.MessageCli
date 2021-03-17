@@ -29,6 +29,36 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             get => _rootNamespace;
             set => _rootNamespace = value?.Trim().TrimEnd('.');
         }
+        
+        public enum CodeGenerators
+        {
+            RobSharper,
+            RosNet
+        }
+        
+        private string _codeGeneratorString;
+
+        [Option(longName: "codegenerator", Required = false, HelpText = "Used Code generator: robsharper | rosnet", Hidden = true)]
+        public string CodeGeneratorString
+        {
+            get => _codeGeneratorString;
+            set
+            {
+                _codeGeneratorString = value;
+
+                if (!string.IsNullOrEmpty(value))
+                {
+                    if (!Enum.TryParse(typeof(CodeGenerators), value, true, out var configElement))
+                    {
+                        throw new NotSupportedException($"Value '{value}' is not supported");
+                    }
+
+                    CodeGenerator = (CodeGenerators) configElement;
+                }
+            }
+        }
+
+        public CodeGenerators? CodeGenerator { get; set; }
 
 
         [Value(0, MetaName = "PackagePath", HelpText = "ROS package(s) source folder", Required = true)]
@@ -58,6 +88,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             if (string.IsNullOrEmpty(RootNamespace))
                 RootNamespace = template;
+        }
+
+        public void SetDefaultCodeGenerator(string codeGenerator)
+        {
+            if (string.IsNullOrEmpty(CodeGeneratorString))
+                CodeGeneratorString = codeGenerator;
         }
         
         [Usage(ApplicationAlias = Program.Name)]

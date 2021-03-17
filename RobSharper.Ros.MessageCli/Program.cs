@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RobSharper.Ros.MessageCli.CodeGeneration;
+using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper;
 using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageCli.Configuration;
@@ -35,7 +36,7 @@ namespace RobSharper.Ros.MessageCli
                 });
 
                 
-                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions>(args);
+                var parserResult = commandLineParser.ParseArguments<CodeGenerationOptions, FeedConfigurationOptions, NamespaceConfigurationOptions, OutputConfigurationOptions, CodeGeneratorConfigurationOptions>(args);
                 var hideUsage = false;
 
                 parserResult
@@ -47,16 +48,20 @@ namespace RobSharper.Ros.MessageCli
 
                         options.SetDefaultBuildAction(configObject.DefaultBuildAction);
                         options.SetDefaultRootNamespace(configObject.RootNamespace);
+                        options.SetDefaultCodeGenerator(configObject.CodeGenerator);
                         options.NugetFeedXmlSources = configObject.NugetFeeds?
                             .Select(f => f.GetXmlString())
                             .ToList() ?? Enumerable.Empty<string>();
 
-                        var templateEngine = serviceProvider.Resolve<IKeyedTemplateFormatter>();
-                        CodeGeneration.CodeGeneration.Execute(options, templateEngine);
+                        var packageGeneratorFactory = serviceProvider
+                            .ResolveKeyed<IRosPackageGeneratorFactory>(options.CodeGeneratorString);
+                        
+                        CodeGeneration.CodeGeneration.Execute(options, packageGeneratorFactory);
                     })
                     .WithParsed<FeedConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<NamespaceConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithParsed<OutputConfigurationOptions>(ConfigurationProgram.Execute)
+                    .WithParsed<CodeGeneratorConfigurationOptions>(ConfigurationProgram.Execute)
                     .WithNotParsed(errs =>
                     {
                         hideUsage = true;
@@ -97,14 +102,14 @@ namespace RobSharper.Ros.MessageCli
             
             containerBuilder.Populate(services);
 
-            // Template Engine
+            // HandlebarsConfiguration
             containerBuilder.Register(context =>
                 {
                     var config = new HandlebarsConfiguration
                     {
                         ThrowOnUnresolvedBindingExpression = true,
                     };
-                    
+
                     config.Helpers.Add("formatValue", (output, hbContext, arguments) =>
                     {
                         object value = arguments[0];
@@ -130,18 +135,40 @@ namespace RobSharper.Ros.MessageCli
 
                         if (value is bool)
                         {
-                            output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value).ToLowerInvariant());
+                            output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value)
+                                .ToLowerInvariant());
                             return;
                         }
-                        
+
                         output.WriteSafeString(string.Format(CultureInfo.InvariantCulture, "{0}", value));
                     });
-                    return new FileBasedHandlebarsTemplateEngine(TemplatePaths.TemplatesDirectory, config);
+
+                    return config;
+                })
+                .AsSelf();
+            
+            // Code generators
+            containerBuilder.Register(context =>
+                {
+                    var handlebarsConfig = context.Resolve<HandlebarsConfiguration>();
+                    var templateEngine = new FileBasedHandlebarsTemplateEngine(UmlRoboticsMessagePackageGenerator.TemplatesDirectory, handlebarsConfig);
+                    var packageGeneratorFactory = new UmlRoboticsMessagePackageGeneratorFactory(templateEngine);
+
+                    return packageGeneratorFactory;
                 })
                 .SingleInstance()
-                .As<IKeyedTemplateEngine>()
-                .As<IKeyedTemplateFormatter>();
-            
+                .Keyed<IRosPackageGeneratorFactory>("rosnet");
+
+            containerBuilder.Register(context =>
+                {
+                    var handlebarsConfig = context.Resolve<HandlebarsConfiguration>();
+                    var templateEngine = new FileBasedHandlebarsTemplateEngine(RobSharperMessagePackageGenerator.TemplatesDirectory, handlebarsConfig);
+                    var packageGeneratorFactory = new RobSharperMessagePackageGeneratorFactory(templateEngine);
+
+                    return packageGeneratorFactory;
+                })
+                .SingleInstance()
+                .Keyed<IRosPackageGeneratorFactory>("robsharper");
             
             var container = containerBuilder.Build();
             

@@ -1,63 +1,108 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
-using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
+using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 {
-    public class RosMessagePackageGenerator : IRosPackageGenerator
+    public abstract partial class RosMessagePackageGenerator : IRosPackageGenerator
     {
-        private readonly CodeGenerationOptions _options;
         private readonly ProjectCodeGenerationDirectoryContext _directories;
         private readonly IKeyedTemplateFormatter _templateEngine;
-
-        private readonly dynamic _data;
         
         private string _projectFilePath;
 
-        private readonly NameMapper _nameMapper;
+        private NameMapper _nameMapper;
+        private PackageTemplateData _packageTemplateData;
 
-        public CodeGenerationPackageContext Package { get; }
+        protected PackageTemplateData PackageTemplateData
+        {
+            get
+            {
+                EnsurePackageData();
+                return _packageTemplateData;
+            }
+        }
+        
+        
+        protected CodeGenerationOptions Options { get; }
+        
+        protected CodeGenerationPackageContext Package { get; }
 
-        public RosMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
+        protected NameMapper NameMapper
+        {
+            get
+            {
+                if (_nameMapper == null)
+                    _nameMapper = GetNameMapper();
+
+                return _nameMapper;
+            }
+        }
+
+        protected abstract string ProjectTemplateFile { get; }
+        protected abstract string NugetConfigTemplateFile { get; }
+        protected abstract string MessageTemplateFile { get; }
+        protected abstract string ServiceTemplateFile { get; }
+        protected abstract string ActionTemplateFile { get; }
+
+        protected virtual bool GenerateActionFile => ActionTemplateFile != null;
+        protected virtual bool GenerateServiceFile => ServiceTemplateFile != null;
+
+        protected RosMessagePackageGenerator(CodeGenerationPackageContext package, CodeGenerationOptions options,
             ProjectCodeGenerationDirectoryContext directories, IKeyedTemplateFormatter templateEngine)
         {
             Package = package ?? throw new ArgumentNullException(nameof(package));
             
-            _options = options ?? throw new ArgumentNullException(nameof(options));
+            Options = options ?? throw new ArgumentNullException(nameof(options));
             _directories = directories ?? throw new ArgumentNullException(nameof(directories));
             _templateEngine = templateEngine ?? throw new ArgumentNullException(nameof(templateEngine));
-
-            var namespaceTemplate = (options.RootNamespace + ".{{Name}}").TrimStart('.');
-            _nameMapper = new UmlRoboticsNameMapper(Package.PackageInfo.Name, new StaticHandlebarsTemplateFormatter(namespaceTemplate));
-            
-            _data = new ExpandoObject();
         }
         
         private void EnsurePackageData()
         {
-            if (((IDictionary<string, object>)_data).ContainsKey("Package"))
+            if (_packageTemplateData != null)
                 return;
+
+            _packageTemplateData = GetPackageTemplateData();
+        }
+
+        protected virtual NameMapper GetNameMapper()
+        {
+            var packageName = Package.PackageInfo.Name;
             
-            _data.Package = new ExpandoObject();
-            _data.Package.RosName = Package.PackageInfo.Name;
-            _data.Package.Version = Package.PackageInfo.Version;
-            _data.Package.Name = Package.PackageInfo.Name.ToPascalCase();
-            _data.Package.Namespace = _nameMapper.GetNamespace(Package.PackageInfo.Name);
-            _data.Package.Description = Package.PackageInfo.Description;
-            _data.Package.HasDescription = !string.IsNullOrEmpty(Package.PackageInfo.Description);
-            _data.Package.ProjectUrl = Package.PackageInfo.ProjectUrl;
-            _data.Package.HasProjectUrl = !string.IsNullOrEmpty(Package.PackageInfo.ProjectUrl);
-            _data.Package.RepositoryUrl = Package.PackageInfo.RepositoryUrl;
-            _data.Package.HasRepositoryUrl = !string.IsNullOrEmpty(Package.PackageInfo.RepositoryUrl);
-            _data.Package.Authors = Package.PackageInfo.Authors;
-            _data.Package.HasAuthors = Package.PackageInfo.Authors != null && Package.PackageInfo.Authors.Any();
-            _data.Package.AuthorsString = string.Join(";", Package.PackageInfo.Authors ?? Enumerable.Empty<string>());
+            var namespaceTemplate = (Options.RootNamespace + ".{{Name}}").TrimStart('.');
+            var packageNamingConvention = new StaticHandlebarsTemplateFormatter(namespaceTemplate);
+
+            var nameMapper = GetNameMapper(packageName, packageNamingConvention);
+            
+            return nameMapper;
+        }
+
+        protected virtual NameMapper GetNameMapper(string packageName, ITemplateFormatter packageNamingConvention)
+        {
+            return new NameMapper(packageName, packageNamingConvention);
+        }
+
+        protected virtual PackageTemplateData GetPackageTemplateData()
+        {
+            var data = new PackageTemplateData
+            {
+                RosName = Package.PackageInfo.Name,
+                Version = Package.PackageInfo.Version,
+                Name = Package.PackageInfo.Name.ToPascalCase(),
+                Namespace = NameMapper.GetNamespace(Package.PackageInfo.Name),
+                Description = Package.PackageInfo.Description,
+                ProjectUrl = Package.PackageInfo.ProjectUrl,
+                RepositoryUrl = Package.PackageInfo.RepositoryUrl,
+                Authors = Package.PackageInfo.Authors,
+            };
+
+            return data;
         }
 
         public void Execute()
@@ -65,7 +110,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             Colorful.Console.WriteLine($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
             Colorful.Console.WriteLine(Package.PackageInfo.PackageDirectory.FullName);
             
+            EnsurePackageData();
+            
             CreateProjectFile();
+            CreateNugetConfigFile();
+            
             AddNugetDependencies();
         
             if (!Package.PackageInfo.IsMetaPackage)
@@ -84,33 +133,24 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
         private void CreateProjectFile()
         {
-            EnsurePackageData();
-
-            var projectFilePath = _directories.TempDirectory.GetFilePath($"{_data.Package.Namespace}.csproj");
-            var projectFileContent = _templateEngine.Format(TemplatePaths.ProjectFile, _data.Package);
+            var projectFilePath = _directories.TempDirectory.GetFilePath($"{PackageTemplateData.Namespace}.csproj");
+            var projectFileContent = _templateEngine.Format(ProjectTemplateFile, PackageTemplateData);
             WriteFile(projectFilePath, projectFileContent);
-
-            
-            var nugetConfig = new
-            {
-                TempNugetFolder = _directories.NugetTempDirectory.FullName,
-                NugetSources = _options.NugetFeedXmlSources
-            };
-
-            var nugetConfigFilePath = _directories.TempDirectory.GetFilePath("nuget.config");
-            var nugetConfigFile = _templateEngine.Format(TemplatePaths.NugetConfigFile, nugetConfig);
-            WriteFile(nugetConfigFilePath, nugetConfigFile);
 
             _projectFilePath = projectFilePath;
         }
 
-        private void BuildProject()
+        private  void CreateNugetConfigFile()
         {
-            Colorful.Console.WriteLine();
-            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
-            Colorful.Console.WriteLine();
-            
-            DotNetProcess.Build(_projectFilePath);
+            var nugetConfig = new
+            {
+                TempNugetFolder = _directories.NugetTempDirectory.FullName,
+                NugetSources = Options.NugetFeedXmlSources
+            };
+
+            var nugetConfigFilePath = _directories.TempDirectory.GetFilePath("nuget.config");
+            var nugetConfigFile = _templateEngine.Format(NugetConfigTemplateFile, nugetConfig);
+            WriteFile(nugetConfigFilePath, nugetConfigFile);
         }
 
         private void AddNugetDependencies()
@@ -127,7 +167,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             {
                 messageNugetPackages = Package.Parser
                     .PackageDependencies
-                    .Select(x => _nameMapper.ResolveNugetPackageName(x))
+                    .Select(x => NameMapper.ResolveNugetPackageName(x))
                     .Distinct()
                     .ToList();
             }
@@ -135,7 +175,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             {
                 messageNugetPackages = Package.Parser
                     .ExternalTypeDependencies
-                    .Select(x => _nameMapper.ResolveNugetPackageName(x))
+                    .Select(x => NameMapper.ResolveNugetPackageName(x))
                     .Distinct()
                     .ToList();
             }
@@ -167,9 +207,18 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
 
+        private void BuildProject()
+        {
+            Colorful.Console.WriteLine();
+            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            Colorful.Console.WriteLine();
+            
+            DotNetProcess.Build(_projectFilePath);
+        }
+
         private void CopyOutput()
         {
-            var nugetFileName = $"{_data.Package.Namespace}.{_data.Package.Version}";
+            var nugetFileName = $"{PackageTemplateData.Namespace}.{PackageTemplateData.Version}";
             
             var nupkgFileName = $"{nugetFileName}.nupkg";
             var snupkgFileName = $"{nugetFileName}.snupkg";
@@ -178,9 +227,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             CopyNugetFile(snupkgFileName);
 
             // Copy dll to output directory if requested
-            if (_options.CreateDll)
+            if (Options.CreateDll)
             {
-                var dllFileName = $"{_data.Package.Namespace}.dll";
+                var dllFileName = $"{PackageTemplateData.Namespace}.dll";
                 
                 var dllSourceFile = new FileInfo(Path.Combine(_directories.TempDirectory.FullName, "bin", "Release", "netstandard2.0", dllFileName));
                 var dllDestinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, dllFileName));
@@ -198,7 +247,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             ReplaceFiles(sourceFile, tempDestinationFile);
 
             // Copy nuget package to output directory if requested
-            if (_options.CreateNugetPackage)
+            if (Options.CreateNugetPackage)
             {
                 var destinationFile = new FileInfo(Path.Combine(_directories.OutputDirectory.FullName, fileName));
                 ReplaceFiles(sourceFile, destinationFile);
@@ -236,7 +285,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateMessage(RosTypeInfo rosType, MessageDescriptor message)
+        protected virtual  void CreateMessage(RosTypeInfo rosType, MessageDescriptor message)
         {
             WriteMessageInternal(rosType, DetailedRosMessageType.Message, message);
         }
@@ -249,9 +298,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateService(RosTypeInfo rosType, ServiceDescriptor service)
+        protected virtual  void CreateService(RosTypeInfo rosType, ServiceDescriptor service)
         {
-            if (_nameMapper.IsBuiltInType(rosType))
+            if (NameMapper.IsBuiltInType(rosType))
                 return;
 
             WriteServiceInternal(rosType);
@@ -269,8 +318,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             }
         }
         
-        private void CreateAction(RosTypeInfo rosType, ActionDescriptor action)
+        protected virtual void CreateAction(RosTypeInfo rosType, ActionDescriptor action)
         {
+            WriteActionInternal(rosType);
+            
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionGoal, action.Goal);
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionResult, action.Result);
             WriteMessageInternal(rosType, DetailedRosMessageType.ActionFeedback, action.Feedback);
@@ -285,105 +336,173 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 throw new ArgumentException($"message type is not detailed enough", nameof(messageType));
             }
             
-            if (_nameMapper.IsBuiltInType(rosType))
+            if (NameMapper.IsBuiltInType(rosType))
                 return;
 
+            var data = GetMessageTemplateData(rosType, messageType, message);
+            SanitizeMessageTemplateData(data);
+            
+            var filePath = _directories.TempDirectory.GetFilePath($"{data.TypeName}.cs");
+            var content = _templateEngine.Format(MessageTemplateFile, data);
+            
+            WriteFile(filePath, content);
+        }
+
+        protected virtual MessageTemplateData GetMessageTemplateData(RosTypeInfo rosType, DetailedRosMessageType messageType,
+            MessageDescriptor message)
+        {
             var fields = message.Fields
-                .Select(x => new
+                .Select(x => new FieldTemplateData
                 {
                     Index = message.Items
-                                .Select((item, index) => new {Item = item, Index = index})
-                                .First(f => f.Item == x)
-                                .Index + 1, // Index of this field in serialized message (starting at 1)
+                        .Select((item, index) => new {Item = item, Index = index})
+                        .First(f => f.Item == x)
+                        .Index + 1, // Index of this field in serialized message (starting at 1)
                     RosType = x.TypeInfo,
                     RosIdentifier = x.Identifier,
-                    Type = new
-                    {
-                        InterfaceName = _nameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo),
-                        ConcreteName = _nameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
-                        IsBuiltInType = x.TypeInfo.IsBuiltInType,
-                        IsArray = x.TypeInfo.IsArray,
-                        IsValueType = x.TypeInfo.IsValueType(),
-                        SupportsEqualityComparer = x.TypeInfo.SupportsEqualityComparer()
-                    },
-                    Identifier = x.Identifier
+                    Type = new FieldTypeTemplateData(NameMapper.ResolveFullQualifiedInterfaceName(x.TypeInfo), 
+                        NameMapper.ResolveFullQualifiedTypeName(x.TypeInfo),
+                        x.TypeInfo)
+                    ,
+                    Identifier = NameMapper.GetFieldName(x.Identifier)
                 })
                 .ToList();
 
             var constants = message.Constants
-                .Select(c => new
+                .Select(c => new ConstantTemplateData
                 {
                     Index = message.Items
-                                .Select((item, index) => new {item, index})
-                                .First(x => x.item == c)
-                                .index + 1,
+                        .Select((item, index) => new {item, index})
+                        .First(x => x.item == c)
+                        .index + 1,
                     RosType = c.TypeInfo,
                     RosIdentifier = c.Identifier,
-                    TypeName = _nameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
-                    Identifier = c.Identifier,
+                    TypeName = NameMapper.ResolveFullQualifiedTypeName(c.TypeInfo),
+                    Identifier = NameMapper.GetConstantName(c.Identifier),
                     Value = c.Value
                 })
                 .ToList();
-
-            var typeName = _nameMapper.GetTypeName(rosType.TypeName, messageType);
-            var data = new
+            
+            var data = new MessageTemplateData
             {
-                Package = _data.Package,
-                RosTypeName = _nameMapper.GetRosTypeName(rosType.TypeName, messageType),
+                Package = PackageTemplateData,
+                RosTypeName = NameMapper.GetRosTypeName(rosType.TypeName, messageType),
                 RosAbstractTypeName = rosType.TypeName,
-                TypeName = typeName,
-                AbstractTypeName = _nameMapper.GetTypeName(rosType.TypeName, DetailedRosMessageType.None),
+                TypeName = NameMapper.GetTypeName(rosType.TypeName, messageType),
+                AbstractTypeName = NameMapper.GetTypeName(rosType.TypeName, DetailedRosMessageType.None),
                 Fields = fields,
                 Constants = constants,
-                MessageType = new
-                {
-                    MessageType = (int) messageType,
-                    IsMessage = messageType.HasFlag(DetailedRosMessageType.Message),
-                    IsAction = messageType.HasFlag(DetailedRosMessageType.Action),
-                    IsActionGoal = messageType.HasFlag(DetailedRosMessageType.ActionGoal),
-                    IsActionResult = messageType.HasFlag(DetailedRosMessageType.ActionResult),
-                    IsActionFeedback = messageType.HasFlag(DetailedRosMessageType.ActionFeedback),
-                    IsService = messageType.HasFlag(DetailedRosMessageType.Service),
-                    IsServiceRequest =  messageType.HasFlag(DetailedRosMessageType.ServiceRequest),
-                    IsServiceResponse = messageType.HasFlag(DetailedRosMessageType.ServiceResponse)
-                }
+                MessageType = new MessageTypeTemplateData(messageType)
             };
 
-            var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
-            var content = _templateEngine.Format(TemplatePaths.MessageFile, data);
+            return data;
+        }
+
+        protected virtual void SanitizeMessageTemplateData(MessageTemplateData data)
+        {
+            // Sanitize possible identifier duplicates resulting from name identifier mapping
+            // Fall back to ROS identifier name in this case.
+            var duplicateIdentifiers = data.Fields.Select(f => f.Identifier)
+                .Union(data.Constants.Select(c => c.Identifier))
+                .GroupBy(identifier => identifier)
+                .Select(x => new {x.Key, Count = x.Count()})
+                .Where(x => x.Count > 1)
+                .Select(x => x.Key)
+                .ToList();
+
+            foreach (var field in data.Fields.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                field.Identifier = field.RosIdentifier;
+            }
+
+            foreach (var constant in data.Constants.Where(x => duplicateIdentifiers.Contains(x.Identifier)))
+            {
+                constant.Identifier = constant.RosIdentifier;
+            }
+
+
+            // Sanitize possible CS0542: Members cannot be the same as their enclosing type.
+            // Rename those field to PreferredIdentifierIfEqualsTypeName. If the name is already used fall back to
+            // the original ROS identifier. 
+            var cs0542Field = data.Fields
+                .FirstOrDefault(x => x.Identifier == data.TypeName);
+
+            if (cs0542Field != null)
+            {
+                var alternativeIdentifier = PreferredIdentifierIfEqualsTypeName;
+                alternativeIdentifier = NameMapper.GetFieldName(alternativeIdentifier);
+
+                if (data.Fields.Any(x => x.Identifier == alternativeIdentifier))
+                    alternativeIdentifier = cs0542Field.RosIdentifier;
+
+                cs0542Field.Identifier = alternativeIdentifier;
+            }
+
+            var cs0542Const = data.Constants
+                .FirstOrDefault(x => x.Identifier == data.TypeName);
+
+            if (cs0542Const != null)
+            {
+                var alternativeIdentifier = PreferredIdentifierIfEqualsTypeName;
+                alternativeIdentifier = NameMapper.GetConstantName(alternativeIdentifier);
+
+                if (data.Constants.Any(x => x.Identifier == alternativeIdentifier))
+                    alternativeIdentifier = cs0542Const.RosIdentifier;
+
+                cs0542Const.Identifier = alternativeIdentifier;
+            }
+        }
+
+        /// <summary>
+        /// Get the preferred identifier name of a field or constant is named the same as the enclosing type.
+        /// This in not allowed in .Net and would cause a CS0542 compilation error
+        /// (CS0542: Members cannot be the same as their enclosing type).
+        /// </summary>
+        /// <returns>"value", since it seems to be the value of the type.</returns>
+        protected virtual string PreferredIdentifierIfEqualsTypeName => "value";
+
+        private void WriteServiceInternal(RosTypeInfo serviceType)
+        {
+            if (!GenerateServiceFile)
+                return;
+            
+            var data = GetServiceTemplateData(serviceType);
+            var filePath = _directories.TempDirectory.GetFilePath($"{data.ServiceType.TypeName}.cs");
+            var content = _templateEngine.Format(ServiceTemplateFile, data);
 
             WriteFile(filePath, content);
         }
 
-        private void WriteServiceInternal(RosTypeInfo serviceType)
+        protected virtual ServiceTemplateData GetServiceTemplateData(RosTypeInfo serviceType)
         {
-            var typeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.Service);
-            
-            var data = new
+            var data = new ServiceTemplateData
             {
-                Package = _data.Package,
-                ServiceType = new
+                Package = PackageTemplateData,
+                ServiceType = new ConcreteTypeTemplateData
                 {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.Service),
-                    TypeName = typeName
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.Service),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.Service)
                 },
-                RequestType = new
+                RequestType = new ConcreteTypeTemplateData
                 {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest),
-                    TypeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest)
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceRequest)
                 },
-                ResponseType = new
+                ResponseType = new ConcreteTypeTemplateData
                 {
-                    RosTypeName = _nameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse),
-                    TypeName = _nameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse)
+                    RosTypeName = NameMapper.GetRosTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse),
+                    TypeName = NameMapper.GetTypeName(serviceType.TypeName, DetailedRosMessageType.ServiceResponse)
                 }
             };
-            
+            return data;
+        }
 
-            var filePath = _directories.TempDirectory.GetFilePath($"{typeName}.cs");
-            var content = _templateEngine.Format(TemplatePaths.ServiceFile, data);
+        private void WriteActionInternal(RosTypeInfo actionType)
+        {
+            if (!GenerateActionFile)
+                return;
 
-            WriteFile(filePath, content);
+            throw new NotSupportedException("No need for this until now");
         }
         
         private void WriteFile(string filePath, string content)
@@ -393,7 +512,5 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             
             File.WriteAllText(filePath, content);
         }
-
-        
     }
 }
