@@ -44,13 +44,13 @@ namespace RobSharper.Ros.MessageCli.Configuration
         public Commands Command { get; set; }
         
         
-        [Value(2, MetaName = "Name", HelpText = "The name of the nuget feed", Required = false)]
+        [Value(2, MetaName = "Name", HelpText = "Name of the nuget feed.", Required = false)]
         public string Name { get; set; }
         
-        [Value(3, MetaName = "Source", HelpText = "Nuget feed source", Required = false)]
+        [Value(3, MetaName = "Source", HelpText = "Nuget feed source.", Required = false)]
         public string Source { get; set; }
         
-        [Value(4, MetaName = "Protocol", Required = false, HelpText = "Optional nuget protocol version (e.g. 3)")]
+        [Value(4, MetaName = "Protocol", Required = false, HelpText = "Optional nuget protocol version (e.g. 3).")]
         public int ProtocolVersion { get; set; }
         
         

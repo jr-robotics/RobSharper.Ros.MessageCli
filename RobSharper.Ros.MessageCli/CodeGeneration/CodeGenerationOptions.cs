@@ -6,24 +6,24 @@ using RobSharper.Ros.MessageCli.Configuration;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
-    [Verb("build", HelpText = "Generates .Net messages from ROS message packages")]
+    [Verb("build", HelpText = "Generates .Net messages from ROS message packages.")]
     public class CodeGenerationOptions
     {
         private string _rootNamespace;
 
-        [Option("dll", Required = false, HelpText = "Create DLL (overrides default output configuration)")]
+        [Option("dll", Required = false, HelpText = "Create DLL (overrides default output configuration).")]
         public bool CreateDll { get; set; }
         
-        [Option("nupkg", Required = false, HelpText = "Create nuget package (overrides default output configuration)")]
+        [Option("nupkg", Required = false, HelpText = "Create nuget package (overrides default output configuration).")]
         public bool CreateNugetPackage { get; set; }
         
-        [Option("preserve", Required = false, HelpText = "Preserve generated source code")]
+        [Option("preserve", Required = false, HelpText = "Preserve generated source code.")]
         public bool PreserveGeneratedCode { get; set; }
         
-        [Option('f', "filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs')")]
+        [Option('f', "filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs').")]
         public IEnumerable<string> Filter { get; set; }
 
-        [Option("namespace", Required = false, HelpText = "Root namespace (overrides default configuration)", Hidden = true)]
+        [Option("namespace", Required = false, HelpText = "Root namespace (overrides default configuration).")]
         public string RootNamespace
         {
             get => _rootNamespace;
@@ -38,7 +38,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         private string _codeGeneratorString;
 
-        [Option(longName: "codegenerator", Required = false, HelpText = "Used Code generator: robsharper | rosnet", Hidden = true)]
+        [Option(longName: "codegenerator", Required = false, HelpText = "Used Code generator: robsharper | rosnet (overrides default configuration).")]
         public string CodeGeneratorString
         {
             get => _codeGeneratorString;
@@ -61,10 +61,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         public CodeGenerators? CodeGenerator { get; set; }
 
 
-        [Value(0, MetaName = "PackagePath", HelpText = "ROS package(s) source folder", Required = true)]
+        [Value(0, MetaName = "PackagePath", HelpText = "ROS package(s) source folder.", Required = true)]
         public string PackagePath { get; set; }
         
-        [Value(1, MetaName = "OutputPath", HelpText = "Output path for generated packages", Required = true)]
+        [Value(1, MetaName = "OutputPath", HelpText = "Output path for generated packages.", Required = true)]
         public string OutputPath { get; set; }
 
         public IEnumerable<string> NugetFeedXmlSources { get; set; }

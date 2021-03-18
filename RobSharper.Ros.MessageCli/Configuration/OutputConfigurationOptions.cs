@@ -5,7 +5,7 @@ using CommandLine.Text;
 
 namespace RobSharper.Ros.MessageCli.Configuration
 {
-    [Verb("config-output", HelpText = "View or edit the default output format for generated message packages")]
+    [Verb("config-output", HelpText = "View or edit the default output format for generated message packages.")]
     public class OutputConfigurationOptions
     {
         public enum ConfigurationElements

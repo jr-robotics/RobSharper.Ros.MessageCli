@@ -5,7 +5,7 @@ using CommandLine.Text;
 
 namespace RobSharper.Ros.MessageCli.Configuration
 {
-    [Verb("config-codegenerator", HelpText = "View or edit the default code generator")]
+    [Verb("config-codegenerator", HelpText = "View or edit the default code generator.")]
     public class CodeGeneratorConfigurationOptions
     {
         public enum ConfigurationElements
@@ -24,7 +24,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
         private string _valueString;
 
         [Value(1, MetaName = "Value",
-            HelpText = "Code generator for package generation: robsharper | rosnet. Updating the value also resets the default namespace",
+            HelpText = "Code generator for package generation: robsharper | rosnet. Updating the value also resets the default namespace.",
             Required = false)]
         public string ValueString
         {
