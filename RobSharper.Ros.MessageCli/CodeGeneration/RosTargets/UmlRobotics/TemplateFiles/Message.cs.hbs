@@ -10,29 +10,36 @@ namespace {{Package.Namespace}}
 {
     {{#if MessageType.IsMessage}}
     [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
     public class {{TypeName}} : RosMessage
     {{/if}}
     {{#if MessageType.IsAction}}
-    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
         {{#if MessageType.IsActionGoal}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Goal)]
     [ActionGoalMessage]
         {{/if}}
         {{#if MessageType.IsActionResult}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Result)]
     [ActionResultMessage]
         {{/if}}
         {{#if MessageType.IsActionFeedback}}
+    [RosActionMessage("{{Package.RosName}}/{{RosAbstractTypeName}}", ActionMessageKind.Feedback)]
     [ActionFeedbackMessage]
         {{/if}}
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
     public class {{TypeName}} : InnerActionMessage
     {{/if}}
     {{#if MessageType.IsService}}
     public partial class {{AbstractTypeName}} {
 
-    [RosMessage("{{Package.RosName}}/{{RosTypeName}}")]
         {{#if MessageType.IsServiceRequest}}
+    [RobSharper.Ros.Adapters.UmlRobotics.UmlRoboticsServiceMessageAttribute("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Request)]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
     public class Request : RosMessage
         {{/if}}
         {{#if MessageType.IsServiceResponse}}
+    [RobSharper.Ros.Adapters.UmlRobotics.UmlRoboticsServiceMessageAttribute("{{Package.RosName}}/{{RosAbstractTypeName}}", ServiceMessageKind.Response)]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
     public class Response : RosMessage
         {{/if}}
     {{/if}}
@@ -40,12 +47,12 @@ namespace {{Package.Namespace}}
         internal static readonly DescriptorBasedMessageTypeInfoProvider TypeInfoProvider = new DescriptorBasedMessageTypeInfoProvider<{{TypeName}}>();
 
         {{#each Constants}}
-        [RosMessageField({{Index}}, "{{RosType}}", "{{RosIdentifier}}")]
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
         public const {{TypeName}} {{Identifier}} = {{formatValue Value}};
         
         {{/each}}
         {{#each Fields}}
-        [RosMessageField({{Index}}, "{{RosType}}", "{{RosIdentifier}}")]
+        [RosMessageField("{{RosType}}", "{{RosIdentifier}}", {{Index}})]
         public {{{Type.InterfaceName}}} {{Identifier}} {{~#unless Type.IsBuiltInType}} = new {{{Type.ConcreteName}}}(){{/unless}};
         
         {{/each}}
@@ -74,12 +81,12 @@ namespace {{Package.Namespace}}
     
         public Request(byte[] serializedMessage)
         {
-        Deserialize(serializedMessage);
+            Deserialize(serializedMessage);
         }
     
         public Request(byte[] serializedMessage, ref int currentIndex)
         {
-        Deserialize(serializedMessage, ref currentIndex);
+            Deserialize(serializedMessage, ref currentIndex);
         }
 {{/if}}
 {{#if MessageType.IsServiceResponse}}
@@ -89,12 +96,12 @@ namespace {{Package.Namespace}}
     
         public Response(byte[] serializedMessage)
         {
-        Deserialize(serializedMessage);
+            Deserialize(serializedMessage);
         }
     
         public Response(byte[] serializedMessage, ref int currentIndex)
         {
-        Deserialize(serializedMessage, ref currentIndex);
+            Deserialize(serializedMessage, ref currentIndex);
         }
 {{/if}}
         
