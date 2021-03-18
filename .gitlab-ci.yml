@@ -160,8 +160,6 @@ test RobSharper net6.0:
     - develop
     - master
     - /^v.*$/
-  variables:
-    GIT_STRATEGY: none
   environment:
     name: JR BaGet
     url: https://robotics-baget.joanneum.at/
@@ -192,8 +190,6 @@ baget manual:
 #  stage: deploy
 #  dependencies:
 #    - nuget-pack
-#  variables:
-#    GIT_STRATEGY: none
 #  environment:
 #    name: NuGet.org
 #    url: https://www.nuget.org/
