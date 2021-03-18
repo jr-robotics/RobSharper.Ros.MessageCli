@@ -188,8 +188,6 @@ baget manual:
 # This task has to be triggered manually
 nuget.org:
   stage: deploy
-  dependencies:
-    - nuget-pack
   environment:
     name: NuGet.org
     url: https://www.nuget.org/
