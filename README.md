@@ -16,7 +16,7 @@ dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--filter 
 |---|---|
 |ROS_MESSAGE_PACKAGE_FOLDER | Path to a directory containing one or more ROS message packages. |
 |DESTINATION_FOLDER | Folder where the generated messages will be copied. |
-| --filter FILTER_EXPR[ FILTER_EXPR]* | Only create message packages matching the given filter expression. FILTER_EXPR is the name of a package. It can start or end with * to filter for a ends-with or starts-with exression. Seperate multiple FILTER_EXPR with a space | 
+| --filter FILTER_EXPR[ FILTER_EXPR]* | Only create message packages matching the given filter expression. FILTER_EXPR is the name of a package. It can start or end with * to filter for a ends-with or starts-with exression. Seperate multiple FILTER_EXPR with a space.<br />Examples:<br />`--filter std_msgs nav_msgs my_*` | 
 | --nupkg | [Default] Create nuget package. |
 | --dll | Create dll. |
 
@@ -102,8 +102,8 @@ Supported generators are:
 
 | Config option | ROS implementation | Notes |
 | ------------- | ------------------ | ----- |
-| robsharper    | RobSharper.ROS     | [RobSharper.Ros](https://github.com/jr-robotics?q=RobSharper.Ros) is a set of packages and tools from [JOANNEUM RESEARCH ROBOTICS](https://www.joanneum.at/robotics/en/). |
-| rosnet        | ROS.Net            | This generator uses the [Xamla fork](https://github.com/Xamla/ROS.NET) of ROS.Net, which is available as [NuGet package](https://www.nuget.org/packages/Uml.Robotics.Ros/). |
+| robsharper    | RobSharper.ROS     | (Default) [RobSharper.Ros](https://github.com/jr-robotics?q=RobSharper.Ros) is a set of packages and tools from [JOANNEUM RESEARCH ROBOTICS](https://www.joanneum.at/robotics/en/). |
+| rosnet        | ROS.Net            | This generator uses the [Xamla fork](https://github.com/Xamla/ROS.NET) of ROS.Net, which is available as [NuGet package](https://www.nuget.org/packages/Uml.Robotics.Ros/). <br /> **WARNING:** This code generator is currently not working in public infrastructures and is intended only for JOANNEUM RESEARCH internal scenarios. |
 
 
 Print usage:

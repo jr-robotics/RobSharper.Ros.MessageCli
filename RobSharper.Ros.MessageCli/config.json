@@ -1,8 +1,8 @@
 {
   "Build": {
     "DefaultBuildAction": "nupkg",
-    "CodeGenerator": "rosnet",
-    "RootNamespace": "Uml.Robotics.Ros.Messages",
+    "CodeGenerator": "robsharper",
+    "RootNamespace": "RobSharper.Ros.Messages",
     "NugetFeeds": [
       {
         "Name": "nuget.org",
