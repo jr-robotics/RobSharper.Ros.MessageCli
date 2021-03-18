@@ -13,11 +13,18 @@ namespace RobSharper.Ros.MessageCli.Configuration
             RobSharper,
             RosNet
         }
+
+        public static readonly IDictionary<ConfigurationElements, string> DefaultNamespaces =
+            new Dictionary<ConfigurationElements, string>()
+            {
+                {ConfigurationElements.RobSharper, "RobSharper.Ros.Messages"},
+                {ConfigurationElements.RosNet, "Uml.Robotics.Ros.Messages"}
+            };
         
         private string _valueString;
 
         [Value(1, MetaName = "Value",
-            HelpText = "Code generator for package generation: robsharper | rosnet",
+            HelpText = "Code generator for package generation: robsharper | rosnet. Updating the value also resets the default namespace",
             Required = false)]
         public string ValueString
         {

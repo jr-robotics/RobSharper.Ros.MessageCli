@@ -23,6 +23,8 @@ namespace RobSharper.Ros.MessageCli.Configuration
             {
                 configuration.RootNamespace = options.Value;
                 UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set namespace to {configuration.RootNamespace}");
             }
         }
 
@@ -40,6 +42,8 @@ namespace RobSharper.Ros.MessageCli.Configuration
                 
                 configuration.DefaultBuildAction = value;
                 UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set output to {configuration.DefaultBuildAction}");
             }
         }
 
@@ -56,7 +60,11 @@ namespace RobSharper.Ros.MessageCli.Configuration
                 var value = options.Value.ToString().ToLowerInvariant();
                 
                 configuration.CodeGenerator = value;
+                configuration.RootNamespace = CodeGeneratorConfigurationOptions.DefaultNamespaces[options.Value.Value];
                 UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set codegenerator to {configuration.CodeGenerator}");
+                Console.WriteLine($"Set namespace to {configuration.RootNamespace}");
             }
         }
         
