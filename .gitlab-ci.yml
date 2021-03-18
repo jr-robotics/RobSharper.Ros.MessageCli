@@ -165,7 +165,7 @@ test RobSharper net6.0:
     url: https://robotics-baget.joanneum.at/
   script:
     - 'cd nuget/latest'
-    - 'dotnet nuget push *.nupkg -s https://robotics-baget.joanneum.at/v3/index.json -k $JR_BAGET_API_KEY'
+    - 'dotnet nuget push *.nupkg -s $JR_BAGET_URL -k $JR_BAGET_API_KEY'
   tags:
     - docker-executor
 
@@ -186,19 +186,19 @@ baget manual:
 
 # Deploy to NuGet.org
 # This task has to be triggered manually
-#nuget.org:
-#  stage: deploy
-#  dependencies:
-#    - nuget-pack
-#  environment:
-#    name: NuGet.org
-#    url: https://www.nuget.org/
-#  only:
-#    - master
-#    - /^v.*$/
-#  script:
-#    - 'cd nuget/latest'
-#    - 'dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k $NUGET_ORG_API_KEY'
-#  tags:
-#    - docker-executor
-#  when: manual
+nuget.org:
+  stage: deploy
+  dependencies:
+    - nuget-pack
+  environment:
+    name: NuGet.org
+    url: https://www.nuget.org/
+  only:
+    - master
+    - /^v.*$/
+  script:
+    - 'cd nuget/latest'
+    - 'dotnet nuget push *.nupkg -s https://api.nuget.org/v3/index.json -k $NUGET_ORG_API_KEY'
+  tags:
+    - docker-executor
+  when: manual
