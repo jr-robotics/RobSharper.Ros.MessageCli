@@ -5,9 +5,9 @@
         <Authors>Guido Breitenhuber</Authors>
         <Copyright>JOANNEUM RESEARCH Forschungsgesellschaft mbH</Copyright>
         <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
-        <Description>ROSMSG builds your message packages</Description>
+        <Description>dotnet rosmsg command builds your ROS message packages</Description>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageCli.git</RepositoryUrl>
+        <RepositoryUrl>https://github.com/jr-robotics/RobSharper.Ros.MessageCli</RepositoryUrl>
         <PackageTags>ROS;RobSharper;RobSharper.Ros;ROS.Messages;</PackageTags>
 
         <PackAsTool>true</PackAsTool>
