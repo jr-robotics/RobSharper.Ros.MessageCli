@@ -4,6 +4,10 @@ dotnet ROSMSG is a .Net Core global tool used to build .Net Packages from ROS me
  
 ## Installation
 
+ROS Message CLI for .Net is a [.NET tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) available as [NuGet Package](https://www.nuget.org/packages/RobSharper.Ros.MessageCli/).
+
+![](https://img.shields.io/nuget/v/RobSharper.Ros.MessageCli.svg)
+
 ```
 dotnet tool install -g RobSharper.Ros.MessageCli
 ```
