@@ -3,10 +3,11 @@ using RobSharper.Ros.MessageEssentials;
 
 namespace {{Package.Namespace}}
 {
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("{{{Package.MessageCliToolInfo.ToolName}}}", "{{{Package.MessageCliToolInfo.Version}}}")]
     public partial class {{ServiceType.TypeName}} : RosService
     {
         private static readonly IRosServiceInfo ServiceInfo = new DescriptorBasedRosServiceInfo(
-            RosType.Parse("{{ServiceType.RosTypeName}}"), 
+            RosType.Parse("{{Package.RosName}}/{{ServiceType.RosTypeName}}"), 
             {{RequestType.TypeName}}.TypeInfoProvider.TypeInfo, 
             {{ResponseType.TypeName}}.TypeInfoProvider.TypeInfo);
 

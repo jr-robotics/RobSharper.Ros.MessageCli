@@ -8,190 +8,176 @@ namespace RobSharper.Ros.MessageCli.Configuration
 {
     public static class ConfigurationProgram
     {
-        public static void Execute(ConfigurationOptions options)
+
+        public static void Execute(NamespaceConfigurationOptions options)
+        {
+            var configuration = LoadConfiguration();
+
+            var value = options.Value?.Trim();
+
+            if (string.IsNullOrEmpty(value))
+            {
+                Console.WriteLine(configuration.RootNamespace ?? "<not set>");
+            }
+            else
+            {
+                configuration.RootNamespace = options.Value;
+                UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set namespace to {configuration.RootNamespace}");
+            }
+        }
+
+        public static void Execute(OutputConfigurationOptions options)
+        {
+            var configuration = LoadConfiguration();
+
+            if (!options.Value.HasValue)
+            {
+                Console.WriteLine(configuration.DefaultBuildAction ?? "<not set>");
+            }
+            else
+            {
+                var value = options.Value.ToString().ToLowerInvariant();
+                
+                configuration.DefaultBuildAction = value;
+                UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set output to {configuration.DefaultBuildAction}");
+            }
+        }
+
+        public static void Execute(CodeGeneratorConfigurationOptions options)
+        {
+            var configuration = LoadConfiguration();
+
+            if (!options.Value.HasValue)
+            {
+                Console.WriteLine(configuration.CodeGenerator ?? "<not set>");
+            }
+            else
+            {
+                var value = options.Value.ToString().ToLowerInvariant();
+                
+                configuration.CodeGenerator = value;
+                configuration.RootNamespace = CodeGeneratorConfigurationOptions.DefaultNamespaces[options.Value.Value];
+                UpdateConfiguration(configuration);
+                
+                Console.WriteLine($"Set codegenerator to {configuration.CodeGenerator}");
+                Console.WriteLine($"Set namespace to {configuration.RootNamespace}");
+            }
+        }
+        
+        public static void Execute(FeedConfigurationOptions options)
         {
             var configuration = LoadConfiguration();
             
             switch (options.Command)
             {
-                case ConfigurationOptions.Commands.Show:
-                    ShowConfigValues(options, configuration);
+                case FeedConfigurationOptions.Commands.Show:
+                    ShowFeeds(options, configuration);
                     break;
-                case ConfigurationOptions.Commands.Set:
-                    SetConfigValue(options, configuration);
+                case FeedConfigurationOptions.Commands.Add:
+                    AddFeed(options, configuration);
                     break;
-                case ConfigurationOptions.Commands.Add:
-                    AddConfigValue(options, configuration);
-                    break;
-                case ConfigurationOptions.Commands.Remove:
-                    RemoveConfigValue(options, configuration);
+                case FeedConfigurationOptions.Commands.Remove:
+                    RemoveFeed(options, configuration);
                     break;
             }
         }
 
-        private static void ShowConfigValues(ConfigurationOptions options, CodeGenerationConfiguration configuration)
+        private static void ShowFeeds(FeedConfigurationOptions options, CodeGenerationConfiguration configuration)
         {
-            switch (options.ConfigurationElement)
+            if (configuration.NugetFeeds == null || !configuration.NugetFeeds.Any())
             {
-                case ConfigurationOptions.ConfigurationElements.Namespace:
-                    Console.WriteLine(configuration.RootNamespace ?? "<not set>");
-                    break;
-                case ConfigurationOptions.ConfigurationElements.DefaultOutput:
-                    Console.WriteLine(configuration.DefaultBuildAction ?? "<not set>");
-                    break;
-                case ConfigurationOptions.ConfigurationElements.Feeds:
-                    if (configuration.NugetFeeds == null || !configuration.NugetFeeds.Any())
-                    {
-                        Console.WriteLine("<not set>");
-                    }
-                    else
-                    {
-                        var maxNameLength = configuration
-                            .NugetFeeds
-                            .Select(f => f.Name.Length)
-                            .Max();
-
-                        const string NameHeader = "Name                    ";
+                Console.WriteLine("<not set>");
+            }
+            else
+            {
+                var maxNameLength = configuration
+                    .NugetFeeds
+                    .Select(f => f.Name.Length)
+                    .Max();
                         
-                        Console.WriteLine($"{"Name",-24} Source");
-                        foreach (var feed in configuration.NugetFeeds)
-                        {
-                            var protocolVersionSuffix = feed.ProtocolVersion > 0 ? $" (protocol {feed.ProtocolVersion})" : "";
-                            Console.WriteLine($"{feed.Name,-24} {feed.Source}{protocolVersionSuffix}");
-                        }
-                    }
-                    break;
-                default:
-                    Console.WriteLine($"Show configuration element {options.ConfigurationElement} is not supported");
-                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    break;
+                Console.WriteLine($"{"Name",-24} Source");
+                foreach (var feed in configuration.NugetFeeds)
+                {
+                    var protocolVersionSuffix = feed.ProtocolVersion > 0 ? $" (protocol {feed.ProtocolVersion})" : "";
+                    Console.WriteLine($"{feed.Name,-24} {feed.Source}{protocolVersionSuffix}");
+                }
             }
         }
 
-        private static void SetConfigValue(ConfigurationOptions options, CodeGenerationConfiguration configuration)
+        
+        private static void RemoveFeed(FeedConfigurationOptions options, CodeGenerationConfiguration configuration)
         {
-            var value = options.Value;
-            switch (options.ConfigurationElement)
+            var feedName = options.Name?.Trim();
+
+            if (string.IsNullOrEmpty(feedName))
             {
-                case ConfigurationOptions.ConfigurationElements.Namespace:
-                    configuration.RootNamespace = value;
+                Console.WriteLine("No feed name provided");
+                Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
+            }
+            else
+            {
+                var feedItem = configuration.NugetFeeds.FirstOrDefault(x =>
+                    x.Name.Equals(feedName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (feedItem == null)
+                {
+                    Console.WriteLine($"No feed with name {feedName} found");
+                    Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
+                }
+                else
+                {
+                    configuration.NugetFeeds.Remove(feedItem);
                     UpdateConfiguration(configuration);
-                    break;
-                case ConfigurationOptions.ConfigurationElements.DefaultOutput:
-                    if (!"nupkg".Equals(value, StringComparison.InvariantCultureIgnoreCase) &&
-                        !"dll".Equals(value, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        Console.WriteLine($"Set configuration element {options.ConfigurationElement} does not support value {value}");
-                        Console.WriteLine("You can either choose 'nupkg' or 'dll'");
-                        Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    }
-                    else
-                    {
-                        configuration.DefaultBuildAction = value;
-                        UpdateConfiguration(configuration);
-                    }
-                    break;
-                case ConfigurationOptions.ConfigurationElements.Feeds:
-                    Console.WriteLine($"Set configuration element {options.ConfigurationElement} is not supported");
-                    Console.WriteLine($"Use commands 'add' or 'remove'");
-                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    break;
-                default:
-                    Console.WriteLine($"Set configuration element {options.ConfigurationElement} is not supported");
-                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    break;
-            }
-        }
-
-        private static void RemoveConfigValue(ConfigurationOptions options, CodeGenerationConfiguration configuration)
-        {
-            switch (options.ConfigurationElement)
-            {
-                case ConfigurationOptions.ConfigurationElements.Feeds:
-                    var feedName = (options.Name ?? options.Value)?.Trim();
-
-                    if (string.IsNullOrEmpty(feedName))
-                    {
-                        Console.WriteLine("No feed name provided");
-                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
-                    }
-                    else
-                    {
-                        var feedItem = configuration.NugetFeeds.FirstOrDefault(x =>
-                            x.Name.Equals(feedName, StringComparison.InvariantCultureIgnoreCase));
-
-                        if (feedItem == null)
-                        {
-                            Console.WriteLine($"No feed with name {feedName} found");
-                            Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
-                        }
-                        else
-                        {
-                            configuration.NugetFeeds.Remove(feedItem);
-                            UpdateConfiguration(configuration);
                             
-                            Console.WriteLine($"Nuget feed {feedName} removed");
-                        }
-                    }
-                    
-                    break;
-                default:
-                    Console.WriteLine($"Remove configuration element {options.ConfigurationElement} is not supported");
-                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    break;
+                    Console.WriteLine($"Nuget feed {feedName} removed");
+                }
             }
         }
 
-        private static void AddConfigValue(ConfigurationOptions options, CodeGenerationConfiguration configuration)
+        private static void AddFeed(FeedConfigurationOptions options, CodeGenerationConfiguration configuration)
         {
-            switch (options.ConfigurationElement)
+            var feedName = options.Name?.Trim();
+
+            if (string.IsNullOrEmpty(feedName))
             {
-                case ConfigurationOptions.ConfigurationElements.Feeds:
-                    var feedName = (options.Name ?? options.Value)?.Trim();
+                Console.WriteLine("No feed name provided");
+                Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
+                return;
+            }
 
-                    if (string.IsNullOrEmpty(feedName))
-                    {
-                        Console.WriteLine("No feed name provided (use option -name)");
-                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
-                        break;
-                    }
-
-                    var source = options.Source?.Trim();
-                    if (string.IsNullOrEmpty(source))
-                    {
-                        Console.WriteLine("No feed source provided (use option -source)");
-                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedSource;
-                        break;
-                    }
+            var source = options.Source?.Trim();
+            if (string.IsNullOrEmpty(source))
+            {
+                Console.WriteLine("No feed source provided");
+                Environment.ExitCode |= (int) ExitCodes.InvalidFeedSource;
+                return;
+            }
                     
-                    var feedItemExists = configuration.NugetFeeds.Any(x =>
-                        x.Name.Equals(feedName, StringComparison.InvariantCultureIgnoreCase));
+            var feedItemExists = configuration.NugetFeeds.Any(x =>
+                x.Name.Equals(feedName, StringComparison.InvariantCultureIgnoreCase));
 
-                    if (feedItemExists)
-                    {
-                        Console.WriteLine($"Feed with name {feedName} already exists");
-                        Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
-                    }
-                    else
-                    {
-                        var feedItem = new NugetSourceConfiguration
-                        {
-                            Name = feedName,
-                            Source = source,
-                            ProtocolVersion = options.ProtocolVersion
-                        };
+            if (feedItemExists)
+            {
+                Console.WriteLine($"Feed with name {feedName} already exists");
+                Environment.ExitCode |= (int) ExitCodes.InvalidFeedName;
+            }
+            else
+            {
+                var feedItem = new NugetSourceConfiguration
+                {
+                    Name = feedName,
+                    Source = source,
+                    ProtocolVersion = options.ProtocolVersion
+                };
                         
-                        configuration.NugetFeeds.Add(feedItem);
-                        UpdateConfiguration(configuration);
+                configuration.NugetFeeds.Add(feedItem);
+                UpdateConfiguration(configuration);
                         
-                        Console.WriteLine($"Nuget feed {feedName} added");
-                    }
-                    
-                    break;
-                default:
-                    Console.WriteLine($"Remove configuration element {options.ConfigurationElement} is not supported");
-                    Environment.ExitCode |= (int) ExitCodes.ConfigurationElementNotSupported;
-                    break;
+                Console.WriteLine($"Nuget feed {feedName} added");
             }
         }
 

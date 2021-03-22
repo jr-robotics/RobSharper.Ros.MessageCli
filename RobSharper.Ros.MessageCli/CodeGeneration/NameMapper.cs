@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using RobSharper.Ros.MessageCli.CodeGeneration.Formatters;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
@@ -8,11 +10,16 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
     {
         private readonly string _packageName;
         private readonly ITemplateFormatter _packageNamingConvention;
+        private readonly INameFormatter _fieldNameFormatter;
+        private readonly INameFormatter _constantNameFormatter;
 
-        public NameMapper(string packageName, ITemplateFormatter packageNamingConvention)
+        public NameMapper(string packageName, ITemplateFormatter packageNamingConvention, 
+            INameFormatter fieldNameFormatter = null, INameFormatter constantNameFormatter = null)
         {
             _packageName = packageName ?? throw new ArgumentNullException(nameof(packageName));
             _packageNamingConvention = packageNamingConvention ?? throw new ArgumentNullException(nameof(packageNamingConvention));
+            _fieldNameFormatter = fieldNameFormatter ?? new AsIsFormatter();
+            _constantNameFormatter = constantNameFormatter ?? new AsIsFormatter();
         }
          
         public virtual string ResolveNugetPackageName(string rosPackageName)
@@ -68,21 +75,36 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     typeName += "Response";
                     break;
             }
+
+            if (typeName.Length > 0)
+            {
+                typeName = typeName.First().ToString().ToUpper() + typeName.Substring(1);
+            }
             
             return typeName;
         }
 
+        public virtual string GetFieldName(string rosIdentifier)
+        {
+            return _fieldNameFormatter.Format(rosIdentifier);
+        }
+
+        public virtual string GetConstantName(string rosIdentifier)
+        {
+            return  _constantNameFormatter.Format(rosIdentifier);
+        }
+
         public string ResolveFullQualifiedTypeName(RosTypeInfo type)
         {
-            return ResolveFullQualifiedName(type, false);
+            return ResolveFullQualifiedTypeName(type, false);
         }
         
         public string ResolveFullQualifiedInterfaceName(RosTypeInfo type)
         {
-            return ResolveFullQualifiedName(type, true);
+            return ResolveFullQualifiedTypeName(type, true);
         }
         
-        protected virtual string ResolveFullQualifiedName(RosTypeInfo type, bool useInterface)
+        protected virtual string ResolveFullQualifiedTypeName(RosTypeInfo type, bool useInterface)
         {
             string typeString;
 
@@ -96,7 +118,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 var rosPackageName = type.PackageName ?? _packageName;
                 var rosTypeName = type.TypeName;
 
-                typeString = ResolveFullQualifiedName(rosPackageName, rosTypeName);
+                typeString = ResolveFullQualifiedTypeName(rosPackageName, rosTypeName);
             }
 
             if (type.IsArray)
@@ -114,7 +136,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             return typeString;
         }
 
-        protected virtual string ResolveFullQualifiedName(string rosPackageName, string rosTypeName)
+        protected virtual string ResolveFullQualifiedTypeName(string rosPackageName, string rosTypeName)
         {
             if (rosPackageName == null) throw new ArgumentNullException(nameof(rosPackageName));
             if (rosTypeName == null) throw new ArgumentNullException(nameof(rosTypeName));

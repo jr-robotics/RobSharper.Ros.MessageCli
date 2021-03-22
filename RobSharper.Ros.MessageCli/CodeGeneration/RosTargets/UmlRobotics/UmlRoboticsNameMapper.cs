@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using RobSharper.Ros.MessageCli.CodeGeneration.Formatters;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
 using RobSharper.Ros.MessageParser;
 
-namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
+namespace RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics
 {
     public class UmlRoboticsNameMapper : NameMapper
     {
@@ -39,7 +40,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
                 { "actionlib_msgs/GoalStatusArray", new RosMessageTypeMapping{TypeName = "UmlRoboticsMessages.actionlib_msgs.GoalStatusArray", NugetPackageName = "Uml.Robotics.Ros.MessageBase"}},
             };
 
-        public UmlRoboticsNameMapper(string packageName, ITemplateFormatter packageNamingConvention) : base(packageName, packageNamingConvention)
+        public UmlRoboticsNameMapper(string packageName, ITemplateFormatter packageNamingConvention) : base(packageName,
+            packageNamingConvention)
         {
         }
 
@@ -64,7 +66,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
             }
         }
 
-        protected override string ResolveFullQualifiedName(string rosPackageName, string rosTypeName)
+        protected override string ResolveFullQualifiedTypeName(string rosPackageName, string rosTypeName)
         {
             if (rosPackageName == null) throw new ArgumentNullException(nameof(rosPackageName));
             if (rosTypeName == null) throw new ArgumentNullException(nameof(rosTypeName));
@@ -74,7 +76,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.UmlRobotics
                 return mapping.TypeName;
             }
             
-            return base.ResolveFullQualifiedName(rosPackageName, rosTypeName);
+            return base.ResolveFullQualifiedTypeName(rosPackageName, rosTypeName);
         }
         
         public override string ResolveNugetPackageName(RosTypeInfo rosType)

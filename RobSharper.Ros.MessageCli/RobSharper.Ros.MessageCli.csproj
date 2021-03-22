@@ -5,19 +5,28 @@
         <Authors>Guido Breitenhuber</Authors>
         <Copyright>JOANNEUM RESEARCH Forschungsgesellschaft mbH</Copyright>
         <PackageLicenseExpression>BSD-3-Clause</PackageLicenseExpression>
-        <Description>ROSMSG builds your message packages</Description>
+        <Description>dotnet rosmsg command builds your ROS message packages</Description>
         <RepositoryType>git</RepositoryType>
-        <RepositoryUrl>https://robotics-git.joanneum.at/RobSharper/ROS/RobSharper.Ros.MessageCli.git</RepositoryUrl>
+        <RepositoryUrl>https://github.com/jr-robotics/RobSharper.Ros.MessageCli</RepositoryUrl>
         <PackageTags>ROS;RobSharper;RobSharper.Ros;ROS.Messages;</PackageTags>
 
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>dotnet-rosmsg</ToolCommandName>
-        <TargetFrameworks>netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
+        
+        <TargetFrameworks>
+            netcoreapp2.1;netcoreapp3.1
+        </TargetFrameworks>
+        <TargetFrameworks Condition="'$(FrameworkLatest)' == 'True'">
+            netcoreapp2.1;netcoreapp3.1;net5.0
+        </TargetFrameworks>
+        <TargetFrameworks Condition="'$(FrameworkPreview)' == 'True'">
+            netcoreapp2.1;netcoreapp3.1;net5.0;net6.0
+        </TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
-      <PackageReference Include="Colorful.Console" Version="1.2.10" />
+      <PackageReference Include="Colorful.Console" Version="1.2.15" />
       <PackageReference Include="CommandLineParser" Version="2.8.0" />
       <PackageReference Include="Handlebars.Net" Version="1.10.1" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.4" />
@@ -27,7 +36,7 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.4" />
       <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.4" />
       <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.4" />
-      <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.6.1" />
+      <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="16.9.1" />
       <PackageReference Include="RobSharper.Ros.MessageParser" Version="2.0.1" />
       <PackageReference Include="RobSharper.Ros.PackageXml" Version="1.1.0" />
     </ItemGroup>
@@ -43,7 +52,10 @@
 
     <!-- Copy templates -->
     <ItemGroup>
-        <Content Include="CodeGeneration\UmlRobotics\TemplateFiles\*.*">
+        <Content Include="CodeGeneration\RosTargets\RobSharper\TemplateFiles\*.*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="CodeGeneration\RosTargets\UmlRobotics\TemplateFiles\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>

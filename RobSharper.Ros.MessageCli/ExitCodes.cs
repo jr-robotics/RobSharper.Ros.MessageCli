@@ -14,6 +14,6 @@ namespace RobSharper.Ros.MessageCli
         InvalidFeedSource = 1 << 5,
         CouldNotAddDependency = 1 << 6,
         CouldNotProcessPackage = 1 << 7,
-        CouldNotDetermineBuildSequence = 1 << 8
+        CouldNotDetermineBuildSequence = 1 << 8,
     }
 }
