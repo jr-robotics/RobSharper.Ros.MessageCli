@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public class CodeGenerationContext : IBuildPackages
     {
+
+        public IEnumerable<RosPackageInfo> AvailablePackages { get; set; }
         public IEnumerable<CodeGenerationPackageContext> Packages { get; private set; }
 
         private PackageRegistry _packageRegistry;
@@ -36,8 +36,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
             var context = this;
             var factory = new RosMessageParserFactory();
-            
-            Packages = packageInfos
+
+            AvailablePackages = packageInfos;
+            Packages = AvailablePackages
+                .Where(p => !p.IsOptional)
                 .Select(p => new CodeGenerationPackageContext(context, p, factory.Create(p, context)))
                 .ToList();
         }

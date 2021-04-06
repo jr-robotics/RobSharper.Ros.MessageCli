@@ -22,6 +22,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         [Option('f', "filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs').")]
         public IEnumerable<string> Filter { get; set; }
+        
+        [Option('d', "dependantPackagePaths", Required = false, HelpText = "Add other directories containing dependent packages (e.g. '/opt/ros/melodic/share').")]
+        public IEnumerable<string> DependencyPackagePaths { get; set; }
 
         [Option("namespace", Required = false, HelpText = "Root namespace (overrides default configuration).")]
         public string RootNamespace

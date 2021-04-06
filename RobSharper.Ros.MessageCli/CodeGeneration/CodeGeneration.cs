@@ -16,7 +16,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
             try
             {
-                context = CodeGenerationContext.Create(options.PackagePath);
+                var packageFolders = RosPackageFolder
+                        .Find(options.PackagePath, RosPackageFolder.BuildType.Mandatory)
+                        .Union(options
+                            .DependencyPackagePaths
+                            .SelectMany(x => x.Split(':'))
+                            .SelectMany(x => RosPackageFolder.Find(x, RosPackageFolder.BuildType.Optional))
+                            .ToList())
+                    /*.Union(RosPackageFolder.GetRosEnvPackages())*/
+                        .ToList();
+                
+                context = CodeGenerationContext.Create(packageFolders);
             }
             catch (DirectoryNotFoundException e)
             {
