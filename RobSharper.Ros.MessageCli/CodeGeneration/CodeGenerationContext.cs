@@ -190,13 +190,16 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static CodeGenerationContext Create(string packageFolder)
         {
-            var p = new RosPackageFolder(packageFolder, RosPackageFolder.BuildType.Mandatory);
-            return Create(p);
+            if (packageFolder == null) throw new ArgumentNullException(nameof(packageFolder));
+
+            var packageFolders =
+                RosPackageFolder.Find(packageFolder, RosPackageFolder.BuildType.Mandatory);
+            
+            return Create(packageFolders);
         }
 
-        public static CodeGenerationContext Create(RosPackageFolder packageFolder)
+        public static CodeGenerationContext Create(IEnumerable<RosPackageFolder> packageFolders)
         {
-            var packageFolders = FindPackageFolders(packageFolder);
             var packages = packageFolders
                 .Select(p =>
                 {
@@ -217,26 +220,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             var context = new CodeGenerationContext(packages);
 
             return context;
-        }
-        
-        private static IEnumerable<RosPackageFolder> FindPackageFolders(RosPackageFolder packageFolder)
-        {
-            var packageFolders = new List<RosPackageFolder>();
-            
-            if (RosPackageInfo.IsPackageFolder(packageFolder.Path))
-            {
-                packageFolders.Add(packageFolder);
-            }
-            else
-            {
-                foreach (var directory in Directory.GetDirectories(packageFolder.Path))
-                {
-                    var subPackageFolder = new RosPackageFolder(directory, packageFolder.BuildStrategy);
-                    packageFolders.AddRange(FindPackageFolders(subPackageFolder));
-                }
-            }
-
-            return packageFolders;
         }
     }
 }

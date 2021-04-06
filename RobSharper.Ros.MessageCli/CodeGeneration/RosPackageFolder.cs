@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
@@ -26,9 +27,47 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 throw new DirectoryNotFoundException($"Directory {path} does not exit.");
             }
+
+            if (!RosPackageInfo.IsPackageFolder(path))
+            {
+                throw new InvalidOperationException($"Directory {path} is not a ROS package folder (package.xml file is missing).");
+            }
             
             Path = path;
             BuildStrategy = type;
+        }
+
+        public static IEnumerable<RosPackageFolder> Find(string basePath, BuildType type)
+        {
+            if (basePath == null) throw new ArgumentNullException(nameof(basePath));
+            
+            basePath = System.IO.Path.GetFullPath(basePath);
+            
+            if (!Directory.Exists(basePath))
+            {
+                throw new DirectoryNotFoundException($"Directory {basePath} does not exit.");
+            }
+
+            return FindInternal(basePath, type);
+        }
+        
+        private static IEnumerable<RosPackageFolder> FindInternal(string basePath, BuildType type)
+        {
+            var packageFolders = new List<RosPackageFolder>();
+            
+            if (RosPackageInfo.IsPackageFolder(basePath))
+            {
+                packageFolders.Add(new RosPackageFolder(basePath, type));
+            }
+            else
+            {
+                foreach (var directory in Directory.GetDirectories(basePath))
+                {
+                    packageFolders.AddRange(FindInternal(directory, type));
+                }
+            }
+
+            return packageFolders;
         }
     }
 }
