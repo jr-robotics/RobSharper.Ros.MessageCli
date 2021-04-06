@@ -81,10 +81,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             if (packageRootPath == null) throw new ArgumentNullException(nameof(packageRootPath));
             
-            return Create(new PackageFolder(packageRootPath, PackageFolder.BuildType.Mandatory));
+            return Create(new RosPackageFolder(packageRootPath, RosPackageFolder.BuildType.Mandatory));
         }
 
-        public static RosPackageInfo Create(PackageFolder packageFolder)
+        public static RosPackageInfo Create(RosPackageFolder packageFolder)
         {
             var logger = LoggingHelper.Factory.CreateLogger<RosPackageInfo>();
             
@@ -121,7 +121,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                         authors,
                         projectUrl,
                         repositoryUrl,
-                        packageFolder.Strategy == PackageFolder.BuildType.Optional);
+                        packageFolder.BuildStrategy == RosPackageFolder.BuildType.Optional);
                 }
                 catch (Exception e)
                 {

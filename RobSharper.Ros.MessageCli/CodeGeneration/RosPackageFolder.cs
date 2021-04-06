@@ -3,7 +3,7 @@ using System.IO;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
-    public readonly struct PackageFolder
+    public readonly struct RosPackageFolder
     {
         public enum BuildType
         {
@@ -14,9 +14,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         public string Path { get; }
         
-        public BuildType Strategy { get; }
+        public BuildType BuildStrategy { get; }
 
-        public PackageFolder(string path, BuildType type)
+        public RosPackageFolder(string path, BuildType type)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
             
@@ -28,7 +28,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             }
             
             Path = path;
-            Strategy = type;
+            BuildStrategy = type;
         }
     }
 }

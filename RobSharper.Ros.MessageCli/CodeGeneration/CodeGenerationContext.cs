@@ -190,11 +190,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static CodeGenerationContext Create(string packageFolder)
         {
-            var p = new PackageFolder(packageFolder, PackageFolder.BuildType.Mandatory);
+            var p = new RosPackageFolder(packageFolder, RosPackageFolder.BuildType.Mandatory);
             return Create(p);
         }
 
-        public static CodeGenerationContext Create(PackageFolder packageFolder)
+        public static CodeGenerationContext Create(RosPackageFolder packageFolder)
         {
             var packageFolders = FindPackageFolders(packageFolder);
             var packages = packageFolders
@@ -206,7 +206,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     }
                     catch (Exception)
                     {
-                        if (p.Strategy == PackageFolder.BuildType.Optional)
+                        if (p.BuildStrategy == RosPackageFolder.BuildType.Optional)
                             return null;
                         
                         throw;
@@ -219,9 +219,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             return context;
         }
         
-        private static IEnumerable<PackageFolder> FindPackageFolders(PackageFolder packageFolder)
+        private static IEnumerable<RosPackageFolder> FindPackageFolders(RosPackageFolder packageFolder)
         {
-            var packageFolders = new List<PackageFolder>();
+            var packageFolders = new List<RosPackageFolder>();
             
             if (RosPackageInfo.IsPackageFolder(packageFolder.Path))
             {
@@ -231,7 +231,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 foreach (var directory in Directory.GetDirectories(packageFolder.Path))
                 {
-                    var subPackageFolder = new PackageFolder(directory, packageFolder.Strategy);
+                    var subPackageFolder = new RosPackageFolder(directory, packageFolder.BuildStrategy);
                     packageFolders.AddRange(FindPackageFolders(subPackageFolder));
                 }
             }
