@@ -47,9 +47,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             }
         }
 
+        public bool IsOptional { get; private set; }
+
         public RosPackageInfo(DirectoryInfo packageDirectory, string name, string version,
             IEnumerable<string> packageDependencies, bool isMetaPackage, string description = null,
-            IEnumerable<string> authors = null, string projectUrl = null, string repositoryUrl = null)
+            IEnumerable<string> authors = null, string projectUrl = null, string repositoryUrl = null, 
+            bool isOptional = false)
         {
             PackageDirectory = packageDirectory ?? throw new ArgumentNullException(nameof(packageDirectory));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -59,6 +62,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             ProjectUrl = projectUrl;
             RepositoryUrl = repositoryUrl;
             Authors = authors ?? Enumerable.Empty<string>();
+            IsOptional = isOptional;
 
             _packageDependencies = new List<string>();
             
@@ -77,10 +81,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             if (packageRootPath == null) throw new ArgumentNullException(nameof(packageRootPath));
             
+            return Create(new PackageFolder(packageRootPath, PackageFolder.BuildType.Mandatory));
+        }
+
+        public static RosPackageInfo Create(PackageFolder packageFolder)
+        {
             var logger = LoggingHelper.Factory.CreateLogger<RosPackageInfo>();
             
-            packageRootPath = Path.GetFullPath(packageRootPath);
-            var packageXmlPath = Path.Combine(packageRootPath, "package.xml");
+            var packageXmlPath = Path.Combine(packageFolder.Path, "package.xml");
 
             using (logger.BeginScope($"package.xml ({packageXmlPath})"))
             {
@@ -103,7 +111,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     var projectUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Website)?.Url;
                     var repositoryUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Repository)?.Url;
                     
-                    var packageDirectory = new DirectoryInfo(packageRootPath);
+                    var packageDirectory = new DirectoryInfo(packageFolder.Path);
                     return new RosPackageInfo(packageDirectory,
                         package.Name, 
                         package.Version, 
@@ -112,7 +120,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                         package.Description,
                         authors,
                         projectUrl,
-                        repositoryUrl);
+                        repositoryUrl,
+                        packageFolder.Strategy == PackageFolder.BuildType.Optional);
                 }
                 catch (Exception e)
                 {

@@ -190,38 +190,49 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static CodeGenerationContext Create(string packageFolder)
         {
-            if (packageFolder == null) throw new ArgumentNullException(nameof(packageFolder));
+            var p = new PackageFolder(packageFolder, PackageFolder.BuildType.Mandatory);
+            return Create(p);
+        }
 
-            packageFolder = Path.GetFullPath(packageFolder);
-            
-            if (!Directory.Exists(packageFolder))
-            {
-                throw new DirectoryNotFoundException($"Directory {packageFolder} does not exit.");
-            }
-
+        public static CodeGenerationContext Create(PackageFolder packageFolder)
+        {
             var packageFolders = FindPackageFolders(packageFolder);
             var packages = packageFolders
-                .Select(RosPackageInfo.Create)
-                .Where(p => p.IsMetaPackage || p.HasMessages);
+                .Select(p =>
+                {
+                    try
+                    {
+                        return RosPackageInfo.Create(p);
+                    }
+                    catch (Exception)
+                    {
+                        if (p.Strategy == PackageFolder.BuildType.Optional)
+                            return null;
+                        
+                        throw;
+                    }
+                })
+                .Where(p => p != null && (p.IsMetaPackage || p.HasMessages));
             
             var context = new CodeGenerationContext(packages);
 
             return context;
         }
         
-        private static IEnumerable<string> FindPackageFolders(string packageFolder)
+        private static IEnumerable<PackageFolder> FindPackageFolders(PackageFolder packageFolder)
         {
-            var packageFolders = new List<string>();
+            var packageFolders = new List<PackageFolder>();
             
-            if (RosPackageInfo.IsPackageFolder(packageFolder))
+            if (RosPackageInfo.IsPackageFolder(packageFolder.Path))
             {
                 packageFolders.Add(packageFolder);
             }
             else
             {
-                foreach (var directory in Directory.GetDirectories(packageFolder))
+                foreach (var directory in Directory.GetDirectories(packageFolder.Path))
                 {
-                    packageFolders.AddRange(FindPackageFolders(directory));
+                    var subPackageFolder = new PackageFolder(directory, packageFolder.Strategy);
+                    packageFolders.AddRange(FindPackageFolders(subPackageFolder));
                 }
             }
 

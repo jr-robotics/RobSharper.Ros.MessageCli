@@ -57,7 +57,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     Colorful.Console.WriteLine(e.Message, Color.Red);
                     Environment.ExitCode |= (int) ExitCodes.CouldNotDetermineBuildSequence;
-                        
+                    
                     return;
                 }
                 
