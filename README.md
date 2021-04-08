@@ -23,6 +23,8 @@ dotnet rosmsg build <ROS_MESSAGE_PACKAGE_FOLDER> <DESTINATION_FOLDER> [--filter 
 | --filter FILTER_EXPR[ FILTER_EXPR]* | Only create message packages matching the given filter expression. FILTER_EXPR is the name of a package. It can start or end with * to filter for a ends-with or starts-with exression. Seperate multiple FILTER_EXPR with a space.<br />Examples:<br />`--filter std_msgs nav_msgs my_*` | 
 | --nupkg | [Default] Create nuget package. |
 | --dll | Create dll. |
+| --required-packages PATH[ PATH]* | Add other directories containing required packages (e.g. '/opt/ros/melodic/share'). These packages are only generated if other generated packages depends on it. |
+| --no-ros-package-path | Do not use $ROS_PACKAGE_PATH as source for required packages. |
 
 
 

@@ -17,7 +17,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         [Option("nupkg", Required = false, HelpText = "Create nuget package (overrides default output configuration).")]
         public bool CreateNugetPackage { get; set; }
         
-        [Option("preserve", Required = false, HelpText = "Preserve generated source code.")]
+        [Option("preserve", Required = false, HelpText = "Do not delete generated source code after package generation.")]
         public bool PreserveGeneratedCode { get; set; }
         
         [Option('f', "filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs').")]
