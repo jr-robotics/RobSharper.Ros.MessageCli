@@ -7,7 +7,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
     public static class RosPackageFolderExtensions
     {
         /// <summary>
-        /// Removes packages with the same Name
+        /// Removes packages with the same name or path
         /// </summary>
         /// <param name="packageFolders"></param>
         /// <returns></returns>
@@ -21,12 +21,20 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             
             foreach (var packageFolder in packageFolders)
             {
+                string name;
+                
                 if (packageFolder.TryGetPackageInfo(out var packageInfo))
                 {
-                    if (names.Contains(packageInfo.Name))
-                        continue;
+                    name = packageInfo.Name;
+                }
+                else
+                {
+                    name = "PATH::" + packageFolder.Path;
+                }
 
-                    names.Add(packageInfo.Name);
+                if (!names.Contains(name))
+                {
+                    names.Add(name);
                     result.Add(packageFolder);
                 }
             }
