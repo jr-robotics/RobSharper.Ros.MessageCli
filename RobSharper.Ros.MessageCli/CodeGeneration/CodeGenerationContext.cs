@@ -6,188 +6,86 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public class CodeGenerationContext : IBuildPackages
     {
+        private readonly IList<RosPackageInfo> _availablePackages = new List<RosPackageInfo>();
+        private readonly IList<CodeGenerationPackageContext> _mandatoryPackages = new List<CodeGenerationPackageContext>();
+        
+        public IEnumerable<RosPackageInfo> AvailablePackages => _availablePackages;
 
-        public IEnumerable<RosPackageInfo> AvailablePackages { get; set; }
-        public IEnumerable<CodeGenerationPackageContext> Packages { get; private set; }
-
-        private PackageRegistry _packageRegistry;
-
-        public PackageRegistry PackageRegistry
-        {
-            get
-            {
-                if (_packageRegistry == null)
-                {
-                    _packageRegistry = new PackageRegistry(this);
-                }
-
-                return _packageRegistry;
-            }
-        }
+        public IEnumerable<CodeGenerationPackageContext> Packages => _mandatoryPackages;
 
         IEnumerable<RosPackageInfo> IBuildPackages.Packages
         {
-            get { return Packages?.Select(x => x.PackageInfo); }
-        }
-
-        private CodeGenerationContext(IEnumerable<RosPackageInfo> packageInfos)
-        {
-            if (packageInfos == null) throw new ArgumentNullException(nameof(packageInfos));
-
-            var context = this;
-            var factory = new RosMessageParserFactory();
-
-            AvailablePackages = packageInfos;
-            Packages = AvailablePackages
-                .Where(p => !p.IsOptional)
-                .Select(p => new CodeGenerationPackageContext(context, p, factory.Create(p, context)))
-                .ToList();
-        }
-
-        /// <summary>
-        /// Parses the message files of all packages
-        /// </summary>
-        public void ParseMessages()
-        {
-            foreach (var package in Packages)
+            get
             {
-                package.Parser.ParseMessages();
+               return _mandatoryPackages
+                   .Select(x => x.PackageInfo)
+                   .ToList();
             }
         }
 
-        /// <summary>
-        /// Filters the package list based on the given filter parameter.
-        /// 
-        /// Filter is a list of package names which will be used to filter the package list.
-        /// Only packages matching the filter expression and dependent packages will be included in
-        /// the final packages list.
-        /// The filter may also contain the asterisk (*) as first or last character to specify
-        /// an ends with or starts with expression.
-        ///
-        /// If the filter is null or empty, no filtering is applied.
-        /// </summary>
-        /// <param name="filters">Filter to apply</param>
-        public void FilterPackages(IEnumerable<string> filters)
+        public CodeGenerationContext()
         {
-            if (filters == null || !filters.Any())
-                return;
-            
-            var innerFilters = new List<Func<string, bool>>();
-
-            foreach (var filter in filters)
-            {
-                var f = filter;
-                Func<string, bool> innerFilter;
-
-                if (f.StartsWith("*"))
-                {
-                    innerFilter = s => s.EndsWith(f.Substring(1));
-                }
-                else if (f.EndsWith("*"))
-                {
-                    innerFilter = s => s.StartsWith(f.Substring(0, f.Length - 1));
-                }
-                else
-                {
-                    innerFilter = s => s.Equals(f);
-                }
-
-                innerFilters.Add(innerFilter);
-            }
-            
-            if (innerFilters.Count == 0)
-                return;
-
-            Func<string, bool> filterExpr;
-
-            if (innerFilters.Count == 1)
-            {
-                filterExpr = innerFilters.First();
-            }
-            else
-            {
-                filterExpr = s => innerFilters.Any(f => f(s));
-            }
-            
-            FilterPackages(filterExpr);
         }
 
-        public void FilterPackages(Func<string, bool> filterExpr)
+        public void AddPackage(RosPackageInfo packageInfo, bool isOptional = false)
         {
-            if (filterExpr == null) throw new ArgumentNullException(nameof(filterExpr));
-            
-            ParseMessages();
+            if (packageInfo == null) throw new ArgumentNullException(nameof(packageInfo));
 
-            var filteredPackages = Packages
-                .Where(p => filterExpr(p.PackageInfo.Name))
-                .ToList();
-
-
-            bool hasMissingPackages;
-            do
+            if (!_availablePackages.Contains(packageInfo))
             {
-                var missingPackageNames = filteredPackages
+                if (_availablePackages.Any(p => string.Equals(p.Name, packageInfo.Name)))
+                    throw new InvalidOperationException("Package with the same name already exists.");
+                
+                _availablePackages.Add(packageInfo);
+            }
+
+            if (isOptional)
+            {
+                // Set mandatory if any other mandatory package
+                // depends on this package
+                var existingDependency = _mandatoryPackages
                     .SelectMany(p => p.Parser.PackageDependencies)
-                    .Distinct()
-                    .Except(filteredPackages
-                        .Select(p => p.PackageInfo.Name)
-                    )
-                    .ToList();
+                    .Any(p => string.Equals(p, packageInfo.Name));
 
-                hasMissingPackages = missingPackageNames.Any();
-
-                var missingPackages = Packages
-                    .Where(p => missingPackageNames.Contains(p.PackageInfo.Name))
-                    .ToList();
-
-                filteredPackages.AddRange(missingPackages);
-            } while (hasMissingPackages);
-
-            Packages = filteredPackages;
+                isOptional = !existingDependency;
+            }
+            
+            if (!isOptional)
+            {
+                SetMandatoryInternal(packageInfo);
+            }
         }
 
-        /// <summary>
-        /// Reorders the package list according to build dependencies.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if packages no build sequence without breaking dependencies can be found.</exception>
-        public void ReorderPackagesForBuilding()
+        public void SetMandatory(RosPackageInfo packageInfo)
         {
-            ParseMessages();
+            if (packageInfo == null) throw new ArgumentNullException(nameof(packageInfo));
 
-            var buildQueue = new List<CodeGenerationPackageContext>();
-            List<CodeGenerationPackageContext> packagesToEnqueue;
+            if (!_availablePackages.Contains(packageInfo))
+                throw new InvalidOperationException("Package is not in the list of available packages. Call AddPackage before.");
 
-            while(true)
+            SetMandatoryInternal(packageInfo);
+        }
+
+        private void SetMandatoryInternal(RosPackageInfo packageInfo)
+        {
+            if (_mandatoryPackages.Any(x => x.PackageInfo == packageInfo))
+                return;
+
+            var messageParser = RosMessageParserFactory.Create(packageInfo, this);
+            
+            var context = new CodeGenerationPackageContext(packageInfo, messageParser);
+            
+            _mandatoryPackages.Add(context);
+            
+            // Add dependencies to build pipeline
+            foreach (var dependentUponPackageName in context.Parser.PackageDependencies)
             {
-                packagesToEnqueue = Packages.Except(buildQueue).ToList();
+                var dependentUponPackage =
+                    _availablePackages.FirstOrDefault(p => string.Equals(p.Name, dependentUponPackageName));
 
-                if (packagesToEnqueue.Count == 0)
-                    break;
-
-                var packageEnqueued = false;
-                foreach (var package in packagesToEnqueue)
-                {
-                    var dependencies = package.Parser.PackageDependencies;
-
-                    // Package can be built if all dependencies are
-                    //    external dependencies (not in build pipeline) OR
-                    //    have to be built but are already enqueued
-                    if (dependencies.All(x =>
-                        !PackageRegistry.Items[x].IsInBuildPipeline || buildQueue.Any(q => q.PackageInfo.Name == x)))
-                    {
-                        buildQueue.Add(package);
-                        packageEnqueued = true;
-                    }
-                }
-
-                // If no package was enqueued in one round, we cannot build
-                if (!packageEnqueued)
-                {
-                    throw new CircularPackageDependencyException("Can not identify build sequence. Packages have a circular dependency.", packagesToEnqueue);
-                }
+                if (dependentUponPackage != null)
+                    SetMandatoryInternal(dependentUponPackage);
             }
-
-            Packages = buildQueue;
         }
 
         public static CodeGenerationContext Create(string packageFolder)
@@ -202,25 +100,33 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static CodeGenerationContext Create(IEnumerable<RosPackageFolder> packageFolders)
         {
-            var packages = packageFolders
-                .Select(p =>
-                {
-                    try
-                    {
-                        return RosPackageInfo.Create(p);
-                    }
-                    catch (Exception)
-                    {
-                        if (p.BuildStrategy == RosPackageFolder.BuildType.Optional)
-                            return null;
-                        
-                        throw;
-                    }
-                })
-                .Where(p => p != null && (p.IsMetaPackage || p.HasMessages));
+            // Ensure existing package info for mandatory packages
+            // Skip faulty optional packages
             
-            var context = new CodeGenerationContext(packages);
+            var context = new CodeGenerationContext();
 
+            foreach (var package in packageFolders)
+            {
+                var isOptional = package.BuildStrategy == RosPackageFolder.BuildType.Optional;
+                RosPackageInfo packageInfo;
+
+                try
+                {
+                    packageInfo = package.PackageInfo;
+                }
+                catch (Exception e)
+                {
+                    //TODO: Log error
+                    
+                    if (isOptional)
+                        continue;
+                    
+                    throw;
+                }
+
+                context.AddPackage(packageInfo, isOptional);
+            }
+            
             return context;
         }
     }

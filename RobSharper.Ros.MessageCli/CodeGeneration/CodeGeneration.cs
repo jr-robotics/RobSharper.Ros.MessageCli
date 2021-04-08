@@ -24,6 +24,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                             .SelectMany(x => RosPackageFolder.Find(x, RosPackageFolder.BuildType.Optional))
                             .ToList())
                     /*.Union(RosPackageFolder.GetRosEnvPackages())*/
+                        .RemoveDuplicates()
+                        .SetMandatoryPackages(options.Filter)
                         .ToList();
                 
                 context = CodeGenerationContext.Create(packageFolders);
@@ -42,26 +44,23 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 return;
             }
             
+            if (options.Filter != null && options.Filter.Any())
+            {
+                Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
+            }
+            else
+            {
+                Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages");
+            }
+            
             using (var directories = new CodeGenerationDirectoryContext(options.OutputPath, options.PreserveGeneratedCode))
             {
-                // Parse message files and build package dependency graph
-                context.ParseMessages();
-
-                if (options.Filter != null && options.Filter.Any())
-                {
-                    context.FilterPackages(options.Filter);
-                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
-                }
-                else
-                {
-                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages");
-                }
-
-
+                var buildOrder = new BuildOrderer(context);
+                
                 // Set build order depending on package dependencies
                 try
                 {
-                    context.ReorderPackagesForBuilding();
+                    buildOrder.Sort();
                 }
                 catch (Exception e)
                 {
@@ -71,7 +70,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     return;
                 }
                 
-                foreach (var package in context.Packages)
+                foreach (var package in buildOrder.Packages)
                 {
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);

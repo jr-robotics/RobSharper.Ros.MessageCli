@@ -5,19 +5,33 @@ using System.Linq;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
-    public readonly struct RosPackageFolder
+    public class RosPackageFolder
     {
+        private RosPackageInfo _packageInfo;
+
         public enum BuildType
         {
-
             Mandatory,
             Optional
         }
         
         public string Path { get; }
         
-        public BuildType BuildStrategy { get; }
+        public BuildType BuildStrategy { get; set; }
 
+        public RosPackageInfo PackageInfo
+        {
+            get
+            {
+                if (_packageInfo == null)
+                {
+                    _packageInfo = RosPackageInfo.Create(Path);
+                }
+
+                return _packageInfo;
+            }
+        }
+        
         public RosPackageFolder(string path, BuildType type)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
@@ -38,6 +52,20 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             BuildStrategy = type;
         }
 
+        public bool TryGetPackageInfo(out RosPackageInfo packageInfo)
+        {
+            try
+            {
+                packageInfo = PackageInfo;
+                return true;
+            }
+            catch
+            {
+                packageInfo = null;
+                return false;
+            }
+        }
+        
         public static IEnumerable<RosPackageFolder> Find(string basePath, BuildType type)
         {
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
