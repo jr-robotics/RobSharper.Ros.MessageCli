@@ -17,16 +17,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             try
             {
                 var packageFolders = RosPackageFolder
-                        .Find(options.PackagePath, RosPackageFolder.BuildType.Mandatory)
-                        .Union(options
-                            .DependencyPackagePaths
-                            .SelectMany(x => x.Split(':'))
-                            .SelectMany(x => RosPackageFolder.Find(x, RosPackageFolder.BuildType.Optional))
-                            .ToList())
-                    /*.Union(RosPackageFolder.GetRosEnvPackages())*/
-                        .RemoveDuplicates()
-                        .SetMandatoryPackages(options.Filter)
-                        .ToList();
+                    .Find(options.PackagePath, RosPackageFolder.BuildType.Mandatory)
+                    .ConcatFolders(options.DependencyPackagePaths)
+                    .ConcatRosPackagePathFolders(!options.IgnoreRosPackagePath)
+                    .RemoveDuplicates()
+                    .SetMandatoryPackages(options.Filter)
+                    .ToList();
                 
                 context = CodeGenerationContext.Create(packageFolders);
             }

@@ -111,5 +111,69 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
             return packageFolders;
         }
+
+        public static IEnumerable<RosPackageFolder> ConcatFolder(this IEnumerable<RosPackageFolder> packageFolders,
+            string folder,
+            RosPackageFolder.BuildType type = RosPackageFolder.BuildType.Optional)
+        {
+            if (string.IsNullOrEmpty(folder))
+                return packageFolders;
+
+            var newItems = CreateRosPackageFolders(folder, type);
+            return packageFolders.Concat(newItems);
+        }
+
+        public static IEnumerable<RosPackageFolder> ConcatFolders(this IEnumerable<RosPackageFolder> packageFolders,
+            IEnumerable<string> folders,
+            RosPackageFolder.BuildType type = RosPackageFolder.BuildType.Optional)
+        {
+            if (folders == null)
+                return packageFolders;
+
+            var newItems = folders
+                .SelectMany(f => CreateRosPackageFolders(f, type));
+
+            return packageFolders.Concat(newItems);
+        }
+        
+        /// <summary>
+        /// Add paths defined in $ROS_PACKAGE_PATH.
+        /// </summary>
+        /// <param name="packageFolders"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static IEnumerable<RosPackageFolder> ConcatRosPackagePathFolders(this IEnumerable<RosPackageFolder> packageFolders, RosPackageFolder.BuildType type = RosPackageFolder.BuildType.Optional)
+        {
+            var rosPackagePath = Environment.GetEnvironmentVariable("ROS_PACKAGE_PATH");
+            return ConcatFolder(packageFolders, rosPackagePath, type);
+        }
+
+        /// <summary>
+        /// Add paths defined in $ROS_PACKAGE_PATH if condition is true.
+        /// </summary>
+        /// <param name="packagefolders"></param>
+        /// <param name="condition">Folders in $ROS_PACKAGE_PATH are only add if this parameter is true</param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static IEnumerable<RosPackageFolder> ConcatRosPackagePathFolders(this IEnumerable<RosPackageFolder> packagefolders, bool condition, RosPackageFolder.BuildType type = RosPackageFolder.BuildType.Optional)
+        {
+            if (!condition)
+                return packagefolders;
+
+            return ConcatRosPackagePathFolders(packagefolders, type);
+        }
+
+        private static IEnumerable<RosPackageFolder> CreateRosPackageFolders(string folder, RosPackageFolder.BuildType type)
+        {
+            if (folder == null)
+                return Enumerable.Empty<RosPackageFolder>();
+
+            var result = folder
+                .Split(':')
+                .SelectMany(x => RosPackageFolder.Find(x, type))
+                .ToList();
+
+            return result;
+        }
     }
 }

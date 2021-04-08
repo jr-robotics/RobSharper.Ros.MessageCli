@@ -98,25 +98,5 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
             return packageFolders;
         }
-
-        public static IEnumerable<RosPackageFolder> GetRosEnvPackages(BuildType type = BuildType.Optional)
-        {
-            var rosPackagePath = Environment.GetEnvironmentVariable("ROS_PACKAGE_PATH");
-            
-            if (rosPackagePath == null)
-                return Enumerable.Empty<RosPackageFolder>();
-
-            var paths = rosPackagePath.Split(":");
-
-            var packageFolders = new List<RosPackageFolder>();
-
-            foreach (var path in paths)
-            {
-                var folders = Find(path, type);
-                packageFolders.AddRange(folders);
-            }
-
-            return packageFolders;
-        }
     }
 }
