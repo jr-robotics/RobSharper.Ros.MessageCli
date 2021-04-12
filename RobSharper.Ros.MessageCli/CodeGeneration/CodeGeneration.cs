@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using RobSharper.Ros.MessageCli.ColorfulConsoleLogging;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -71,8 +73,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     return;
                 }
                 
+                var packageStopwatch = new Stopwatch();
+                
                 foreach (var package in buildOrder.Packages)
                 {
+                    packageStopwatch.Restart();
+                    
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
                     var generator = packageGeneratorFactory.CreateMessagePackageGenerator(options, package, packageDirectories);
@@ -83,17 +89,23 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError(e, $"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]");
+                        Logger.LogError(e,
+                            $"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]");
                         Environment.ExitCode |= (int) ExitCodes.CouldNotProcessPackage;
-                        
+
                         return;
+                    }
+                    finally
+                    {
+                        packageStopwatch.Stop();
+                        Logger.LogInformation($"Time Elapsed {packageStopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
+                        Logger.LogInformation(string.Empty);
                     }
                 }
             }
             
             stopwatch.Stop();
-            
-            Logger.LogInformation($"Total execution time: {stopwatch.Elapsed}");
+            Logger.LogInformation($"Total Time Elapsed {stopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
         }
     }
 }

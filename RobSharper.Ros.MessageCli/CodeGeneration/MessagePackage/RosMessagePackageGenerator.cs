@@ -134,7 +134,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             using (new ConsoleColorScope(Color.Lime))
             {
                 Logger.LogInformation($"Package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}] created");
-                Logger.LogInformation(string.Empty);
             }
         }
 
