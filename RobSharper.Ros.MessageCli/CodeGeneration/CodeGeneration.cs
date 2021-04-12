@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
@@ -32,27 +31,24 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 Logger.LogError(e, "Could not find all mandatory packages.");
                 
-                Colorful.Console.WriteLine($"Could not find all mandatory packages. {e.Message}", Color.Red);
-                Colorful.Console.WriteLine(e.Message, Color.Red);
-                
                 Environment.ExitCode |= (int) ExitCodes.RosPackagePathNotFound;
                 return;
             }
 
             if (!context.Packages.Any())
             {
-                Colorful.Console.WriteLine("Package directory does not contain any packages.");
+                Logger.LogInformation("Package directory does not contain any packages.");
                 Environment.ExitCode |= (int) ExitCodes.Success;
                 return;
             }
             
             if (options.Filter != null && options.Filter.Any())
             {
-                Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
+                Logger.LogInformation($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
             }
             else
             {
-                Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages");
+                Logger.LogInformation($"Building {context.Packages.Count()} packages");
             }
             
             using (var directories = new CodeGenerationDirectoryContext(options.OutputPath, options.PreserveGeneratedCode))
@@ -67,12 +63,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 catch (Exception e)
                 {
                     Logger.LogError(e, "Could not determine build sequence.");
-                    
-                    Colorful.Console.WriteLine($"Could not determine build sequence.{e.Message}", Color.Red);
-                    Colorful.Console.WriteLine(e.Message, Color.Red);
-                    
                     Environment.ExitCode |= (int) ExitCodes.CouldNotDetermineBuildSequence;
-                    
                     return;
                 }
                 
@@ -89,12 +80,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     catch (Exception e)
                     {
                         Logger.LogError(e, $"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]");
-                        
-                        Colorful.Console.WriteLine();
-                        Colorful.Console.WriteLine($"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]", Color.Red);
-                        Colorful.Console.WriteLine(e.Message, Color.Red);
-                        Colorful.Console.WriteLine();
-
                         Environment.ExitCode |= (int) ExitCodes.CouldNotProcessPackage;
                         
                         return;

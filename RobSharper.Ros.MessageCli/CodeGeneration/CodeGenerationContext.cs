@@ -122,7 +122,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     if (isOptional)
                     {
-                        Colorful.Console.WriteLine(e.Message, Color.Orange);
                         Logger.LogWarning(e, e.Message);
                         continue;
                     }
