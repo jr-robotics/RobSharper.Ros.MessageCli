@@ -194,11 +194,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             foreach (var dependency in messageNugetPackages)
             {
                 Logger.LogInformation($"  {dependency}");
-                var command = $"add \"{_projectFilePath}\" package {dependency} --no-restore";
 
                 try
                 {
-                    DotNetProcess.Execute(command, false);
+                    DotNetProcess.AddPackage(_projectFilePath, dependency);
                 }
                 catch (ProcessFailedException e)
                 {

@@ -80,5 +80,18 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             var command = $"build \"{projectFilePath}\" -c Release -v minimal";
             return Execute(command);
         }
+
+        public static Process AddPackage(string projectFilePath, string dependency)
+        {
+            #if NETCOREAPP2_1
+            var command = $"add \"{projectFilePath}\" package {dependency}";
+            return Execute(command);
+            
+            #else
+            var command = $"add \"{projectFilePath}\" package {dependency} --no-restore";
+            return Execute(command, false);
+            
+            #endif
+        }
     }
 }
