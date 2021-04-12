@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -88,6 +89,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             }
         }
 
+        private static readonly ILogger Logger = LoggingHelper.Factory.CreateLogger<RosPackageInfo>();
+        
         public static CodeGenerationContext Create(string packageFolder)
         {
             if (packageFolder == null) throw new ArgumentNullException(nameof(packageFolder));
@@ -116,11 +119,13 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 }
                 catch (Exception e)
                 {
-                    //TODO: Log error
-                    
                     if (isOptional)
+                    {
+                        Logger.LogWarning($"Could not load package {package.Path}. {e.Message} {e.InnerException?.Message}".Trim());
                         continue;
-                    
+                    }
+                     
+                    Logger.LogError(e, $"Could not load package {package.Path}");   
                     throw;
                 }
 

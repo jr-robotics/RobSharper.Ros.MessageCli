@@ -86,49 +86,35 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
         public static RosPackageInfo Create(RosPackageFolder packageFolder)
         {
-            var logger = LoggingHelper.Factory.CreateLogger<RosPackageInfo>();
-            
             var packageXmlPath = Path.Combine(packageFolder.Path, "package.xml");
 
-            using (logger.BeginScope($"package.xml ({packageXmlPath})"))
+            if (!File.Exists(packageXmlPath))
             {
-                if (!File.Exists(packageXmlPath))
-                {
-                    logger.LogError("package.xml not found");
-                    throw new FileNotFoundException("package.xml not found");
-                }
-
-                try
-                {
-                    var package = PackageXmlReader.ReadPackageXml(packageXmlPath);
-
-                    var authors = package.Maintainers
-                        .Union(package.Authors)
-                        .Distinct()
-                        .Select(x => x.ToString())
-                        .ToList();
-
-                    var projectUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Website)?.Url;
-                    var repositoryUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Repository)?.Url;
-                    
-                    var packageDirectory = new DirectoryInfo(packageFolder.Path);
-                    return new RosPackageInfo(packageDirectory,
-                        package.Name, 
-                        package.Version, 
-                        package.PackageDependencies, 
-                        package.IsMetaPackage,
-                        package.Description,
-                        authors,
-                        projectUrl,
-                        repositoryUrl,
-                        packageFolder.BuildStrategy == RosPackageFolder.BuildType.Optional);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError("Could not deserialize package.xml", e);
-                    throw;
-                }
+                throw new FileNotFoundException($"File package.xml ({packageXmlPath}) not found.");
             }
+
+            var package = PackageXmlReader.ReadPackageXml(packageXmlPath);
+
+            var authors = package.Maintainers
+                .Union(package.Authors)
+                .Distinct()
+                .Select(x => x.ToString())
+                .ToList();
+
+            var projectUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Website)?.Url;
+            var repositoryUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Repository)?.Url;
+                
+            var packageDirectory = new DirectoryInfo(packageFolder.Path);
+            return new RosPackageInfo(packageDirectory,
+                package.Name, 
+                package.Version, 
+                package.PackageDependencies, 
+                package.IsMetaPackage,
+                package.Description,
+                authors,
+                projectUrl,
+                repositoryUrl,
+                packageFolder.BuildStrategy == RosPackageFolder.BuildType.Optional);
         }
     }
 }

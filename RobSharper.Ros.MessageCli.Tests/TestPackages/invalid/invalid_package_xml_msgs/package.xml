@@ -1,0 +1,26 @@
+<package>
+  <name>invalid_package_xml_msgs</name>
+  <version>1.0.0</version>
+  <description>
+    ROS Package with invalid package.xml file 
+  </description>
+  <maintainer email="noreply@nomail.com">Foo Bar</maintainer>
+  <license>MIT</license>
+
+  <!-- THIS IS INVALID
+  
+  <url>http://wiki.ros.org/</url>
+  <author>Foo Bar</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+
+  <export>
+    <architecture_independent/>
+  </export>
+</package>
