@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +11,9 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         
         public static void Execute(CodeGenerationOptions options, IRosPackageGeneratorFactory packageGeneratorFactory)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (packageGeneratorFactory == null) throw new ArgumentNullException(nameof(packageGeneratorFactory));
             
@@ -86,6 +90,10 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     }
                 }
             }
+            
+            stopwatch.Stop();
+            
+            Logger.LogInformation($"Total execution time: {stopwatch.Elapsed}");
         }
     }
 }

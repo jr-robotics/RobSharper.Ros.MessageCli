@@ -191,19 +191,15 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                 return;
             
             Logger.LogInformation($"Restoring package dependencies");
-            foreach (var dependency in messageNugetPackages)
-            {
-                Logger.LogInformation($"  {dependency}");
-            }
-            Logger.LogInformation(string.Empty);
             
             foreach (var dependency in messageNugetPackages)
             {
-                var command = $"add \"{_projectFilePath}\" package {dependency}";
+                Logger.LogInformation($"  {dependency}");
+                var command = $"add \"{_projectFilePath}\" package {dependency} --no-restore";
 
                 try
                 {
-                    DotNetProcess.Execute(command);
+                    DotNetProcess.Execute(command, false);
                 }
                 catch (ProcessFailedException e)
                 {
@@ -212,6 +208,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                         $"Could not add dependency {dependency}.", e);
                 }
             }
+            Logger.LogInformation(string.Empty);
         }
 
         private void BuildProject()
