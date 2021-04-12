@@ -19,17 +19,20 @@ namespace RobSharper.Ros.MessageCli.ColorfulConsoleLogging
             if (!IsEnabled(logLevel))
                 return;
             
-            Color? color = null;
+            Color? color = ConsoleColorScope.Current?.Color;
 
-            switch (logLevel)
+            if (color == null)
             {
-                case LogLevel.Critical:
-                case LogLevel.Error:
-                    color = Color.Red;
-                    break;
-                case LogLevel.Warning:
-                    color = Color.Orange;
-                    break;
+                switch (logLevel)
+                {
+                    case LogLevel.Critical:
+                    case LogLevel.Error:
+                        color = Color.Red;
+                        break;
+                    case LogLevel.Warning:
+                        color = Color.Orange;
+                        break;
+                }
             }
 
             var message = formatter(state, exception);
