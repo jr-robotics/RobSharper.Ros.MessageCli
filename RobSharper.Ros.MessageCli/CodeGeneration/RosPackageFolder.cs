@@ -25,7 +25,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 if (_packageInfo == null)
                 {
-                    _packageInfo = RosPackageInfo.Create(Path);
+                    try
+                    {
+                        _packageInfo = RosPackageInfo.Create(Path);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new InvalidOperationException($"Could not load package {Path}. {e.Message} {e.InnerException?.Message}", e);
+                    }
                 }
 
                 return _packageInfo;

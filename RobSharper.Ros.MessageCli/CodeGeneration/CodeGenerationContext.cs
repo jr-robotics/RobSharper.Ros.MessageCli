@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
@@ -121,11 +122,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 {
                     if (isOptional)
                     {
-                        Logger.LogWarning($"Could not load package {package.Path}. {e.Message} {e.InnerException?.Message}".Trim());
+                        Colorful.Console.WriteLine(e.Message, Color.Orange);
+                        Logger.LogWarning(e, e.Message);
                         continue;
                     }
-                     
-                    Logger.LogError(e, $"Could not load package {package.Path}");   
+                    
                     throw;
                 }
 

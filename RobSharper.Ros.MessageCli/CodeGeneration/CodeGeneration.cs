@@ -1,12 +1,14 @@
 using System;
 using System.Drawing;
-using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public static partial class CodeGeneration
     {
+        private static readonly ILogger Logger = LoggingHelper.Factory.CreateLogger(typeof(CodeGeneration));
+        
         public static void Execute(CodeGenerationOptions options, IRosPackageGeneratorFactory packageGeneratorFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
@@ -26,9 +28,13 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 
                 context = CodeGenerationContext.Create(packageFolders);
             }
-            catch (DirectoryNotFoundException e)
+            catch (Exception e)
             {
+                Logger.LogError(e, "Could not find all mandatory packages.");
+                
+                Colorful.Console.WriteLine($"Could not find all mandatory packages. {e.Message}", Color.Red);
                 Colorful.Console.WriteLine(e.Message, Color.Red);
+                
                 Environment.ExitCode |= (int) ExitCodes.RosPackagePathNotFound;
                 return;
             }
@@ -60,7 +66,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                 }
                 catch (Exception e)
                 {
+                    Logger.LogError(e, "Could not determine build sequence.");
+                    
+                    Colorful.Console.WriteLine($"Could not determine build sequence.{e.Message}", Color.Red);
                     Colorful.Console.WriteLine(e.Message, Color.Red);
+                    
                     Environment.ExitCode |= (int) ExitCodes.CouldNotDetermineBuildSequence;
                     
                     return;
@@ -78,6 +88,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     }
                     catch (Exception e)
                     {
+                        Logger.LogError(e, $"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]");
+                        
                         Colorful.Console.WriteLine();
                         Colorful.Console.WriteLine($"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]", Color.Red);
                         Colorful.Console.WriteLine(e.Message, Color.Red);
