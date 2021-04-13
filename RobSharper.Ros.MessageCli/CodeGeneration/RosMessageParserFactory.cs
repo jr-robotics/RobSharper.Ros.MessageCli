@@ -3,9 +3,9 @@ using RobSharper.Ros.MessageCli.CodeGeneration.MetaPackage;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
-    internal class RosMessageParserFactory
+    internal static class RosMessageParserFactory
     {
-        public IRosMessagePackageParser Create(RosPackageInfo rosPackageInfo, CodeGenerationContext context)
+        public static IRosMessagePackageParser Create(RosPackageInfo rosPackageInfo, CodeGenerationContext context)
         {
             if (rosPackageInfo.IsMetaPackage)
             {
@@ -15,6 +15,6 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             {
                 return new RosMessagePackageParser(rosPackageInfo, context);
             }
-        }
+        } 
     }
 }

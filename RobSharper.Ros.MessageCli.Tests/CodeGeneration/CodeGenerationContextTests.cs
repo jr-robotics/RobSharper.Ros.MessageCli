@@ -55,34 +55,5 @@ namespace RobSharper.Ros.MessageCli.Tests.CodeGeneration
 
             context.Packages.First(x => x.PackageInfo.Name == "common_msgs").PackageInfo.IsMetaPackage.Should().BeTrue();
         }
-
-        [Fact]
-        public void Can_reorder_packages_for_building_if_only_one_package_should_be_built()
-        {
-            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("std_msgs"));
-            
-            context.ReorderPackagesForBuilding();
-            context.Packages.Count().Should().Be(1);
-        }
-
-        [Fact]
-        public void Can_reorder_packages_for_building_dependent_packages()
-        {
-            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath("common_msgs"));
-            
-            context.ReorderPackagesForBuilding();
-            context.Packages.Count().Should().Be(10);
-            context.Packages.Last().PackageInfo.Name.Should().Be("common_msgs", "the meta package should be built as last package");
-        }
-
-        [Fact]
-        public void Reorder_packages_for_building_throws_exception_if_circular_dependencies_detected()
-        {
-            var context = CodeGenerationContext.Create(TestUtils.CreatePackagePath(false, "circular_msgs"));
-
-            context.Invoking(x => x.ReorderPackagesForBuilding())
-                .Should().Throw<CircularPackageDependencyException>();
-            
-        }
     }
 }

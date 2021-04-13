@@ -17,11 +17,17 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         [Option("nupkg", Required = false, HelpText = "Create nuget package (overrides default output configuration).")]
         public bool CreateNugetPackage { get; set; }
         
-        [Option("preserve", Required = false, HelpText = "Preserve generated source code.")]
+        [Option("preserve", Required = false, HelpText = "Do not delete generated source code after package generation.")]
         public bool PreserveGeneratedCode { get; set; }
         
         [Option('f', "filter", Required = false, HelpText = "Only generates packages matching the filter (e.g. '*_msgs' or 'geometry_msgs nav_msgs my_msgs').")]
         public IEnumerable<string> Filter { get; set; }
+        
+        [Option('r', "required-packages", Required = false, HelpText = "Add other directories containing required packages (e.g. '/opt/ros/melodic/share').")]
+        public IEnumerable<string> DependencyPackagePaths { get; set; }
+        
+        [Option("no-ros-package-path", Required = false, HelpText = "Do not use $ROS_PACKAGE_PATH as source for required packages.")]
+        public bool IgnoreRosPackagePath { get; set; }
 
         [Option("namespace", Required = false, HelpText = "Root namespace (overrides default configuration).")]
         public string RootNamespace

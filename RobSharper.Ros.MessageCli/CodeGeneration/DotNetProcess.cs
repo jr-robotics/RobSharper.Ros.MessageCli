@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
-using CommandLine;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
@@ -10,7 +9,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
     {
         const string ProgramName = "dotnet";
         
-        public static Process Execute(string command)
+        public static Process Execute(string command, bool writeOutput = true)
         {
             var proc = new Process
             {
@@ -28,9 +27,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             var procOutput = new StringBuilder();
             try
             {
-                proc.OutputDataReceived += (s, e) => WriteOutput(e);
-                proc.ErrorDataReceived += (s, e) => Colorful.Console.Error.WriteLine($"  {e.Data}");
-                
+                if (writeOutput)
+                {
+                    proc.OutputDataReceived += (s, e) => WriteOutput(e);
+                    proc.ErrorDataReceived += (s, e) => Colorful.Console.Error.WriteLine($"  {e.Data}");
+                }
+
                 proc.Start();
                 proc.BeginOutputReadLine();
                 proc.BeginErrorReadLine();
@@ -77,6 +79,19 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             var command = $"build \"{projectFilePath}\" -c Release -v minimal";
             return Execute(command);
+        }
+
+        public static Process AddPackage(string projectFilePath, string dependency)
+        {
+            #if NETCOREAPP2_1
+            var command = $"add \"{projectFilePath}\" package {dependency}";
+            return Execute(command);
+            
+            #else
+            var command = $"add \"{projectFilePath}\" package {dependency} --no-restore";
+            return Execute(command, false);
+            
+            #endif
         }
     }
 }

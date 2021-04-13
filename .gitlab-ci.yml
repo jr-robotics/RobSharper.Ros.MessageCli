@@ -71,7 +71,13 @@ pack PREVIEW:
     - 'dotnet tool install --add-source ./nuget/$X_BUILD_VERSION -g RobSharper.Ros.MessageCli --version $X_CI_VERSION'
     - 'dotnet rosmsg config-feeds add "Robotics BaGet" https://robotics-baget.joanneum.at/v3/index.json 3'
     - 'dotnet rosmsg config-feeds'
-    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-messages-nuget/$X_TFM --nupkg --namespace $X_NAMESPACE --codegenerator $X_CODEGENERATOR'
+    - 'echo Building all valid message packages'
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid ./ros-messages-nuget/all/$X_TFM --nupkg --namespace $X_NAMESPACE --codegenerator $X_CODEGENERATOR'
+    - 'echo Building common_msgs with explicit reference to std_msgs'
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid/common_msgs ./ros-messages-nuget/common_msgs/$X_TFM --nupkg --namespace $X_NAMESPACE --codegenerator $X_CODEGENERATOR --required-packages ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid/std_msgs'
+    - 'echo Building common_msgs with $ROS_PACKAGE_PATH'
+    - 'export ROS_PACKAGE_PATH=./RobSharper.Ros.MessageCli.Tests/TestPackages/valid/std_msgs'
+    - 'dotnet rosmsg build ./RobSharper.Ros.MessageCli.Tests/TestPackages/valid/common_msgs ./ros-messages-nuget/common_msgs__ros_package_path/$X_TFM --nupkg --namespace $X_NAMESPACE --codegenerator $X_CODEGENERATOR'
   artifacts:
     paths:
       - ros-messages-nuget
