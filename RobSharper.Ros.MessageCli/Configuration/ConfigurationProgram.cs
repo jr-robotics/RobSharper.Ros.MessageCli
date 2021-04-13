@@ -183,7 +183,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
 
         private static CodeGenerationConfiguration LoadConfiguration()
         {
-            var configFilePath = GetCOnfigFilePath();
+            var configFilePath = GetConfigFilePath();
 
             var configJson = File.ReadAllText(configFilePath);
             var config = JsonConvert.DeserializeObject<ConfigurationRootElement>(configJson);
@@ -191,7 +191,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
             return config.Build;
         }
 
-        private static string GetCOnfigFilePath()
+        private static string GetConfigFilePath()
         {
             var configFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                 "config.json");
@@ -206,7 +206,7 @@ namespace RobSharper.Ros.MessageCli.Configuration
             };
 
             var serialized = JsonConvert.SerializeObject(container, Formatting.Indented);
-            var configFilePath = GetCOnfigFilePath();
+            var configFilePath = GetConfigFilePath();
             
             File.WriteAllText(configFilePath, serialized);
         }
