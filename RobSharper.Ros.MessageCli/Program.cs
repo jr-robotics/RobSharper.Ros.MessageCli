@@ -13,6 +13,7 @@ using RobSharper.Ros.MessageCli.CodeGeneration;
 using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.RobSharper;
 using RobSharper.Ros.MessageCli.CodeGeneration.RosTargets.UmlRobotics;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
+using RobSharper.Ros.MessageCli.ColorfulConsoleLogging;
 using RobSharper.Ros.MessageCli.Configuration;
 
 namespace RobSharper.Ros.MessageCli
@@ -96,7 +97,8 @@ namespace RobSharper.Ros.MessageCli
                 .AddLogging(x => x
                     .AddConfiguration(configuration.GetSection("Logging"))
                     .AddDebug()
-                    .AddConsole());
+                    .AddColorfulConsole()
+                    );
             
             var containerBuilder = new ContainerBuilder();
             

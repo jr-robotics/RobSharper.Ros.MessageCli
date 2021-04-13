@@ -15,5 +15,6 @@ namespace RobSharper.Ros.MessageCli
         CouldNotAddDependency = 1 << 6,
         CouldNotProcessPackage = 1 << 7,
         CouldNotDetermineBuildSequence = 1 << 8,
+        CouldNotRestoreDependencies = 1 << 9,
     }
 }

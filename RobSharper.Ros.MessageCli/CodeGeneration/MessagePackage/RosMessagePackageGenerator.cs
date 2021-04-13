@@ -3,14 +3,18 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage.TemplateData;
 using RobSharper.Ros.MessageCli.CodeGeneration.TemplateEngines;
+using RobSharper.Ros.MessageCli.ColorfulConsoleLogging;
 using RobSharper.Ros.MessageParser;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 {
     public abstract partial class RosMessagePackageGenerator : IRosPackageGenerator
     {
+        private static readonly ILogger Logger = LoggingHelper.Factory.CreateLogger<RosMessagePackageGenerator>();
+        
         private readonly ProjectCodeGenerationDirectoryContext _directories;
         private readonly IKeyedTemplateFormatter _templateEngine;
         
@@ -107,8 +111,8 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
         public void Execute()
         {
-            Colorful.Console.WriteLine($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
-            Colorful.Console.WriteLine(Package.PackageInfo.PackageDirectory.FullName);
+            Logger.LogInformation($"Processing message package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            Logger.LogInformation(Package.PackageInfo.PackageDirectory.FullName);
             
             EnsurePackageData();
             
@@ -126,9 +130,11 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
 
             BuildProject();
             CopyOutput();
-            
-            Colorful.Console.WriteLine($"Package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}] created", Color.Lime);
-            Colorful.Console.WriteLine();
+
+            using (new ConsoleColorScope(Color.Lime))
+            {
+                Logger.LogInformation($"Package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}] created");
+            }
         }
 
         private void CreateProjectFile()
@@ -183,20 +189,15 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
             if (!messageNugetPackages.Any()) 
                 return;
             
-            Colorful.Console.WriteLine($"Restoring package dependencies");
-            foreach (var dependency in messageNugetPackages)
-            {
-                Colorful.Console.WriteLine($"  {dependency}");
-            }
-            Colorful.Console.WriteLine();
+            Logger.LogInformation($"Restoring package dependencies");
             
             foreach (var dependency in messageNugetPackages)
             {
-                var command = $"add \"{_projectFilePath}\" package {dependency}";
+                Logger.LogInformation($"  {dependency}");
 
                 try
                 {
-                    DotNetProcess.Execute(command);
+                    DotNetProcess.AddPackage(_projectFilePath, dependency);
                 }
                 catch (ProcessFailedException e)
                 {
@@ -205,13 +206,14 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration.MessagePackage
                         $"Could not add dependency {dependency}.", e);
                 }
             }
+            Logger.LogInformation(string.Empty);
         }
 
         private void BuildProject()
         {
-            Colorful.Console.WriteLine();
-            Colorful.Console.WriteLine($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
-            Colorful.Console.WriteLine();
+            Logger.LogInformation(string.Empty);
+            Logger.LogInformation($"Building package {Package.PackageInfo.Name} [{Package.PackageInfo.Version}]");
+            Logger.LogInformation(string.Empty);
             
             DotNetProcess.Build(_projectFilePath);
         }

@@ -1,14 +1,21 @@
 using System;
+using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
+using RobSharper.Ros.MessageCli.ColorfulConsoleLogging;
 
 namespace RobSharper.Ros.MessageCli.CodeGeneration
 {
     public static partial class CodeGeneration
     {
+        private static readonly ILogger Logger = LoggingHelper.Factory.CreateLogger(typeof(CodeGeneration));
+        
         public static void Execute(CodeGenerationOptions options, IRosPackageGeneratorFactory packageGeneratorFactory)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (packageGeneratorFactory == null) throw new ArgumentNullException(nameof(packageGeneratorFactory));
             
@@ -16,53 +23,62 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
 
             try
             {
-                context = CodeGenerationContext.Create(options.PackagePath);
+                var packageFolders = RosPackageFolder
+                    .Find(options.PackagePath, RosPackageFolder.BuildType.Mandatory)
+                    .ConcatFolders(options.DependencyPackagePaths)
+                    .ConcatRosPackagePathFolders(!options.IgnoreRosPackagePath)
+                    .RemoveDuplicates()
+                    .SetMandatoryPackages(options.Filter)
+                    .ToList();
+                
+                context = CodeGenerationContext.Create(packageFolders);
             }
-            catch (DirectoryNotFoundException e)
+            catch (Exception e)
             {
-                Colorful.Console.WriteLine(e.Message, Color.Red);
+                Logger.LogError(e, "Could not find all mandatory packages.");
+                
                 Environment.ExitCode |= (int) ExitCodes.RosPackagePathNotFound;
                 return;
             }
 
             if (!context.Packages.Any())
             {
-                Colorful.Console.WriteLine("Package directory does not contain any packages.");
+                Logger.LogInformation("Package directory does not contain any packages.");
                 Environment.ExitCode |= (int) ExitCodes.Success;
                 return;
             }
             
+            if (options.Filter != null && options.Filter.Any())
+            {
+                Logger.LogInformation($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
+            }
+            else
+            {
+                Logger.LogInformation($"Building {context.Packages.Count()} packages");
+            }
+            
             using (var directories = new CodeGenerationDirectoryContext(options.OutputPath, options.PreserveGeneratedCode))
             {
-                // Parse message files and build package dependency graph
-                context.ParseMessages();
-
-                if (options.Filter != null && options.Filter.Any())
-                {
-                    context.FilterPackages(options.Filter);
-                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages filtered with '{string.Join(' ', options.Filter)}'.");
-                }
-                else
-                {
-                    Colorful.Console.WriteLine($"Building {context.Packages.Count()} packages");
-                }
-
-
+                var buildOrder = new BuildOrderer(context);
+                
                 // Set build order depending on package dependencies
                 try
                 {
-                    context.ReorderPackagesForBuilding();
+                    buildOrder.Sort();
                 }
                 catch (Exception e)
                 {
-                    Colorful.Console.WriteLine(e.Message, Color.Red);
+                    Logger.LogError(e, "Could not determine build sequence.");
                     Environment.ExitCode |= (int) ExitCodes.CouldNotDetermineBuildSequence;
-                        
                     return;
                 }
                 
-                foreach (var package in context.Packages)
+                var packageStopwatch = new Stopwatch();
+                
+                foreach (var package in buildOrder.Packages)
                 {
+                    packageStopwatch.Restart();
+                    
                     // Create Package
                     var packageDirectories = directories.GetPackageTempDir(package.PackageInfo);
                     var generator = packageGeneratorFactory.CreateMessagePackageGenerator(options, package, packageDirectories);
@@ -73,17 +89,23 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
                     }
                     catch (Exception e)
                     {
-                        Colorful.Console.WriteLine();
-                        Colorful.Console.WriteLine($"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]", Color.Red);
-                        Colorful.Console.WriteLine(e.Message, Color.Red);
-                        Colorful.Console.WriteLine();
-
+                        Logger.LogError(e,
+                            $"Could not process message package {package.PackageInfo.Name} [{package.PackageInfo.Version}]");
                         Environment.ExitCode |= (int) ExitCodes.CouldNotProcessPackage;
-                        
+
                         return;
+                    }
+                    finally
+                    {
+                        packageStopwatch.Stop();
+                        Logger.LogInformation($"Time Elapsed {packageStopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
+                        Logger.LogInformation(string.Empty);
                     }
                 }
             }
+            
+            stopwatch.Stop();
+            Logger.LogInformation($"Total Time Elapsed {stopwatch.Elapsed:hh\\:mm\\:ss\\.ff}");
         }
     }
 }

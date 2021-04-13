@@ -47,9 +47,12 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             }
         }
 
+        public bool IsOptional { get; private set; }
+
         public RosPackageInfo(DirectoryInfo packageDirectory, string name, string version,
             IEnumerable<string> packageDependencies, bool isMetaPackage, string description = null,
-            IEnumerable<string> authors = null, string projectUrl = null, string repositoryUrl = null)
+            IEnumerable<string> authors = null, string projectUrl = null, string repositoryUrl = null, 
+            bool isOptional = false)
         {
             PackageDirectory = packageDirectory ?? throw new ArgumentNullException(nameof(packageDirectory));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -59,6 +62,7 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
             ProjectUrl = projectUrl;
             RepositoryUrl = repositoryUrl;
             Authors = authors ?? Enumerable.Empty<string>();
+            IsOptional = isOptional;
 
             _packageDependencies = new List<string>();
             
@@ -77,49 +81,40 @@ namespace RobSharper.Ros.MessageCli.CodeGeneration
         {
             if (packageRootPath == null) throw new ArgumentNullException(nameof(packageRootPath));
             
-            var logger = LoggingHelper.Factory.CreateLogger<RosPackageInfo>();
-            
-            packageRootPath = Path.GetFullPath(packageRootPath);
-            var packageXmlPath = Path.Combine(packageRootPath, "package.xml");
+            return Create(new RosPackageFolder(packageRootPath, RosPackageFolder.BuildType.Mandatory));
+        }
 
-            using (logger.BeginScope($"package.xml ({packageXmlPath})"))
+        public static RosPackageInfo Create(RosPackageFolder packageFolder)
+        {
+            var packageXmlPath = Path.Combine(packageFolder.Path, "package.xml");
+
+            if (!File.Exists(packageXmlPath))
             {
-                if (!File.Exists(packageXmlPath))
-                {
-                    logger.LogError("package.xml not found");
-                    throw new FileNotFoundException("package.xml not found");
-                }
-
-                try
-                {
-                    var package = PackageXmlReader.ReadPackageXml(packageXmlPath);
-
-                    var authors = package.Maintainers
-                        .Union(package.Authors)
-                        .Distinct()
-                        .Select(x => x.ToString())
-                        .ToList();
-
-                    var projectUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Website)?.Url;
-                    var repositoryUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Repository)?.Url;
-                    
-                    var packageDirectory = new DirectoryInfo(packageRootPath);
-                    return new RosPackageInfo(packageDirectory,
-                        package.Name, 
-                        package.Version, 
-                        package.PackageDependencies, 
-                        package.IsMetaPackage,
-                        package.Description,
-                        authors,
-                        projectUrl,
-                        repositoryUrl);
-                }
-                catch (Exception e)
-                {
-                    logger.LogError("Could not deserialize package.xml", e);
-                    throw;
-                }
+                throw new FileNotFoundException($"File package.xml ({packageXmlPath}) not found.");
             }
+
+            var package = PackageXmlReader.ReadPackageXml(packageXmlPath);
+
+            var authors = package.Maintainers
+                .Union(package.Authors)
+                .Distinct()
+                .Select(x => x.ToString())
+                .ToList();
+
+            var projectUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Website)?.Url;
+            var repositoryUrl = package.Urls?.FirstOrDefault(x => x.Type == PackageUrlType.Repository)?.Url;
+                
+            var packageDirectory = new DirectoryInfo(packageFolder.Path);
+            return new RosPackageInfo(packageDirectory,
+                package.Name, 
+                package.Version, 
+                package.PackageDependencies, 
+                package.IsMetaPackage,
+                package.Description,
+                authors,
+                projectUrl,
+                repositoryUrl,
+                packageFolder.BuildStrategy == RosPackageFolder.BuildType.Optional);
         }
     }
 }
